@@ -1,0 +1,4 @@
+        .sidebar { min-height: 100vh; width: 250px; transition: all 0.3s; }
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        input[type=range] { accent-color: #ffc107; }

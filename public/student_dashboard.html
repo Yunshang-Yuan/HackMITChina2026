@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMEBANK | 控制终端</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="s_d.css">
+</head>
+<body>
+
+    <div class="d-flex">
+        <div class="sidebar p-4 d-flex flex-column">
+            <div class="sys-logo mb-4">
+                <i class="bi bi-box-fill fs-3 text-danger me-2"></i>
+                <span class="fs-4">SYS.TIMEBANK</span>
+            </div>
+            
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active px-3 py-2" id="nav-hub"><i class="bi bi-hdd-network-fill me-2"></i> 任务大厅 [HUB]</a>
+                </li>
+                <li class="nav-item mt-2">
+                    <a href="#" class="nav-link px-3 py-2" id="nav-my-tasks"><i class="bi bi-terminal-fill me-2"></i> 个人进程 [LOGS]</a>
+                </li>
+            </ul>
+            
+            <div class="mt-auto border-top border-dark pt-3" style="border-width: 2px !important; border-color: var(--brut-black) !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: bold;">
+                        <div class="text-muted">USER_ID:</div>
+                        <div style="color: var(--brut-black);" id="user-email-display">LOADING...</div>
+                    </div>
+                    <button class="btn btn-brut btn-sm px-2 py-1" id="btn-logout" title="TERMINATE SESSION"><i class="bi bi-power"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-grow-1" style="height: 100vh; overflow-y: auto;">
+            
+            <nav class="navbar navbar-expand-lg brut-navbar px-4 py-3">
+                <div class="container-fluid d-flex justify-content-between align-items-center">
+                    <span class="navbar-brand m-0" id="top-title">TERMINAL // 任务大厅</span>
+                    
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-brut px-3" id="btn-theme-toggle" title="TOGGLE THEME (切换昼夜)"><i class="bi bi-moon-stars-fill"></i></button>
+                        <button class="btn btn-brut px-3" id="btn-settings" title="SYSTEM SETTINGS (系统设置)"><i class="bi bi-gear-fill"></i> SETTINGS</button>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                
+                <div class="row mb-5">
+                    <div class="col-md-3 mb-3">
+                        <div class="brut-card h-100 p-3">
+                            <span class="status-label">SYS.TOTAL_HOURS</span>
+                            <div class="d-flex align-items-baseline">
+                                <span class="status-val" id="stat-time">0</span><span class="ms-1 fw-bold">H</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="brut-card h-100 p-3">
+                            <span class="status-label text-danger" style="border-color: var(--brut-red);">SYS.ASSETS (COIN)</span>
+                            <div class="d-flex align-items-baseline text-danger">
+                                <span class="status-val" id="stat-coins">0</span><i class="bi bi-circle-square ms-2 fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="brut-card h-100 p-3 bg-dark text-white" style="box-shadow: 4px 4px 0px var(--brut-red); border-color: var(--brut-black);">
+                            <span class="status-label" style="border-color: var(--brut-white);">SYS.REPUTATION</span>
+                            <div class="d-flex align-items-center mt-2">
+                                <span class="status-val me-2" id="stat-rep-score">100</span>
+                                <span id="stat-rep-badge" class="badge bg-light text-dark font-monospace fw-bold px-2 py-1" style="border: 1px solid var(--brut-black);">NOMINAL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="brut-card h-100 p-3">
+                            <span class="status-label">SYS.ACTIVE_TASKS</span>
+                            <div class="d-flex align-items-baseline">
+                                <span class="status-val" id="stat-active">0</span><span class="ms-2 font-monospace fw-bold">PROC</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="section-hub" class="page-section active">
+                    <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> AVAILABLE_TASKS</h5>
+                    <div class="row g-4" id="task-list">
+                        </div>
+                </div>
+
+                <div id="section-my-tasks" class="page-section">
+                    <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> ACTIVE_PROCESSES</h5>
+                    <div class="table-responsive">
+                        <table class="table brut-table align-middle mb-0">
+                            <thead>
+                                <tr><th class="ps-4 py-3">TASK_NAME</th><th>EST_REWARD</th><th>TIMESTAMP</th><th>STATUS</th><th class="text-end pe-4">ACTION</th></tr>
+                            </thead>
+                            <tbody id="my-records-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content brut-modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title fw-black font-monospace m-0 text-uppercase">📁 TASK_DATA_EXTRACT</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-7 p-4 border-end" style="border-right: 4px solid var(--brut-black) !important; background: var(--brut-white);">
+                            <span class="badge-brut mb-3 d-inline-block" id="modal-task-tag">--</span>
+                            <h2 class="fw-black mb-4" id="modal-task-title" style="letter-spacing: -1px;">LOADING...</h2>
+                            <div class="bg-light border p-3 mb-4 font-monospace small" style="border-color: var(--brut-black) !important; box-shadow: inset 2px 2px 0px rgba(0,0,0,0.1);">
+                                <p class="mb-0" id="modal-task-desc" style="white-space: pre-wrap;">LOADING...</p>
+                            </div>
+                            
+                            <table class="table table-sm mb-0 font-monospace small" style="border-color: var(--brut-black);">
+                                <tbody>
+                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">PUB_ID</td><td class="fw-bold" id="modal-task-pub" style="border-color: var(--brut-black);">--</td></tr>
+                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">START_T</td><td class="fw-bold" id="modal-task-start" style="border-color: var(--brut-black);">--</td></tr>
+                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">REQ_CAP</td><td class="fw-bold text-danger" style="border-color: var(--brut-black);"><span id="modal-task-cap">0</span> UNITS</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-5 p-4 d-flex flex-column justify-content-center align-items-center bg-light">
+                            <span class="status-label">CAPABILITY_RADAR</span>
+                            <div style="width: 100%; max-width: 220px;" class="mb-4">
+                                <canvas id="studentRadarChart"></canvas>
+                            </div>
+                            
+                            <div class="w-100 p-3 border text-center" style="background: var(--brut-white); border-color: var(--brut-black) !important;">
+                                <span class="d-block font-monospace small fw-bold mb-2">EXPECTED_YIELD</span>
+                                <h3 class="fw-black m-0"><span id="modal-task-time">0</span>H / <span id="modal-task-coins" class="text-danger">0</span><i class="bi bi-circle-square ms-1 fs-5 text-danger"></i></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer p-3">
+                    <button type="button" class="btn btn-brut px-4" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="button" class="btn btn-brut btn-brut-red px-5" id="btn-modal-accept">EXECUTE (接取)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="s_d.js"></script>
+</body>
+</html>
