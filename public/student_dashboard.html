@@ -26,6 +26,12 @@
                 <li class="nav-item mt-2">
                     <a href="#" class="nav-link px-3 py-2" id="nav-my-tasks"><i class="bi bi-terminal-fill me-2"></i> 个人进程 [LOGS]</a>
                 </li>
+                <li class="nav-item mt-2">
+                    <a href="#" class="nav-link px-3 py-2" id="nav-retro"><i class="bi bi-calendar-plus-fill me-2"></i> 志愿补录 [RETRO]</a>
+                </li>
+                <li class="nav-item mt-2">
+                    <a href="#" class="nav-link px-3 py-2" id="nav-my-data"><i class="bi bi-bar-chart-fill me-2"></i> 我的数据 [DATA]</a>
+                </li>
             </ul>
             
             <div class="mt-auto border-top border-dark pt-3" style="border-width: 2px !important; border-color: var(--brut-black) !important;">
@@ -45,7 +51,14 @@
                 <div class="container-fluid d-flex justify-content-between align-items-center">
                     <span class="navbar-brand m-0" id="top-title">TERMINAL // 任务大厅</span>
                     
-                    <div class="d-flex gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-none d-lg-flex gap-3 me-3 font-monospace small fw-bold" id="nav-mini-stats">
+                            <span><i class="bi bi-clock-history"></i> <span id="nav-time">0</span>H</span>
+                            <span class="text-danger"><i class="bi bi-circle-square"></i> <span id="nav-coins">0</span>C</span>
+                            <span>REP: <span id="nav-rep">100</span></span>
+                            <span>PROC: <span id="nav-active">0</span></span>
+                        </div>
+                        
                         <button class="btn btn-brut px-3" id="btn-theme-toggle" title="TOGGLE THEME (切换昼夜)"><i class="bi bi-moon-stars-fill"></i></button>
                         <button class="btn btn-brut px-3" id="btn-settings" title="SYSTEM SETTINGS (系统设置)"><i class="bi bi-gear-fill"></i> SETTINGS</button>
                     </div>
@@ -54,46 +67,9 @@
 
             <div class="container-fluid p-4">
                 
-                <div class="row mb-5">
-                    <div class="col-md-3 mb-3">
-                        <div class="brut-card h-100 p-3">
-                            <span class="status-label">SYS.TOTAL_HOURS</span>
-                            <div class="d-flex align-items-baseline">
-                                <span class="status-val" id="stat-time">0</span><span class="ms-1 fw-bold">H</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="brut-card h-100 p-3">
-                            <span class="status-label text-danger" style="border-color: var(--brut-red);">SYS.ASSETS (COIN)</span>
-                            <div class="d-flex align-items-baseline text-danger">
-                                <span class="status-val" id="stat-coins">0</span><i class="bi bi-circle-square ms-2 fs-4"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="brut-card h-100 p-3 bg-dark text-white" style="box-shadow: 4px 4px 0px var(--brut-red); border-color: var(--brut-black);">
-                            <span class="status-label" style="border-color: var(--brut-white);">SYS.REPUTATION</span>
-                            <div class="d-flex align-items-center mt-2">
-                                <span class="status-val me-2" id="stat-rep-score">100</span>
-                                <span id="stat-rep-badge" class="badge bg-light text-dark font-monospace fw-bold px-2 py-1" style="border: 1px solid var(--brut-black);">NOMINAL</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="brut-card h-100 p-3">
-                            <span class="status-label">SYS.ACTIVE_TASKS</span>
-                            <div class="d-flex align-items-baseline">
-                                <span class="status-val" id="stat-active">0</span><span class="ms-2 font-monospace fw-bold">PROC</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div id="section-hub" class="page-section active">
                     <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> AVAILABLE_TASKS</h5>
-                    <div class="row g-4" id="task-list">
-                        </div>
+                    <div class="row g-4" id="task-list"></div>
                 </div>
 
                 <div id="section-my-tasks" class="page-section">
@@ -101,10 +77,79 @@
                     <div class="table-responsive">
                         <table class="table brut-table align-middle mb-0">
                             <thead>
-                                <tr><th class="ps-4 py-3">TASK_NAME</th><th>EST_REWARD</th><th>TIMESTAMP</th><th>STATUS</th><th class="text-end pe-4">ACTION</th></tr>
+                                <tr class="align-middle">
+                                    <th class="text-center py-3">TASK_NAME</th>
+                                    <th class="text-center py-3">EST_REWARD</th>
+                                    <th class="text-center py-3">TIMESTAMP</th>
+                                    <th class="text-center py-3">STATUS</th>
+                                    <th class="text-center py-3">ACTION</th>
+                                </tr>
                             </thead>
                             <tbody id="my-records-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div id="section-retro" class="page-section">
+                    <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> RETROACTIVE_ENTRY</h5>
+                    <div class="brut-card p-4 mx-auto" style="max-width: 600px;">
+                        <form id="form-retro">
+                            <div class="mb-3">
+                                <label class="form-label font-monospace fw-bold small">EVENT_DESC [活动名称及描述]</label>
+                                <input type="text" class="form-control brut-input" id="retro-desc" placeholder="例如：2026极客黑客马拉松志愿者" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label font-monospace fw-bold small">CLAIMED_HOURS [申请补录时长]</label>
+                                <input type="number" step="0.5" class="form-control brut-input" id="retro-hours" placeholder="例如：4.5" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label font-monospace fw-bold small">PROOF_LINK [证明材料链接/文字]</label>
+                                <textarea class="form-control brut-input" id="retro-proof" rows="3" placeholder="请贴上证明照片的云盘链接，或联系老师确认的人证说明" required></textarea>
+                            </div>
+                            <div class="p-3 mb-4 bg-light border border-dark border-2 font-monospace small">
+                                <i class="bi bi-info-circle-fill text-danger me-2"></i><strong>NOTICE:</strong> 提交后将由 ADMIN 进行人工审核，通过后工时将自动入账。
+                            </div>
+                            <button type="button" class="btn btn-brut btn-brut-red w-100 py-2 fs-5" id="btn-submit-retro">SUBMIT_REQUEST <i class="bi bi-send-fill ms-2"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="section-my-data" class="page-section">
+                    <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> MY_DATA_DASHBOARD</h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="brut-card h-100 p-3">
+                                <span class="status-label">SYS.TOTAL_HOURS</span>
+                                <div class="d-flex align-items-baseline">
+                                    <span class="status-val" id="stat-time">0</span><span class="ms-1 fw-bold">H</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="brut-card h-100 p-3">
+                                <span class="status-label text-danger" style="border-color: var(--brut-red);">SYS.ASSETS (COIN)</span>
+                                <div class="d-flex align-items-baseline text-danger">
+                                    <span class="status-val" id="stat-coins">0</span><i class="bi bi-circle-square ms-2 fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="brut-card h-100 p-3 bg-dark text-white" style="box-shadow: 4px 4px 0px var(--brut-red); border-color: var(--brut-black);">
+                                <span class="status-label" style="border-color: var(--brut-white);">SYS.REPUTATION</span>
+                                <div class="d-flex align-items-center mt-2">
+                                    <span class="status-val me-2" id="stat-rep-score">100</span>
+                                    <span id="stat-rep-badge" class="badge bg-light text-dark font-monospace fw-bold px-2 py-1" style="border: 1px solid var(--brut-black);">NOMINAL</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="brut-card h-100 p-3">
+                                <span class="status-label">SYS.ACTIVE_TASKS</span>
+                                <div class="d-flex align-items-baseline">
+                                    <span class="status-val" id="stat-active">0</span><span class="ms-2 font-monospace fw-bold">PROC</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -114,48 +159,7 @@
 
     <div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content brut-modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title fw-black font-monospace m-0 text-uppercase">📁 TASK_DATA_EXTRACT</h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <div class="row g-0">
-                        <div class="col-md-7 p-4 border-end" style="border-right: 4px solid var(--brut-black) !important; background: var(--brut-white);">
-                            <span class="badge-brut mb-3 d-inline-block" id="modal-task-tag">--</span>
-                            <h2 class="fw-black mb-4" id="modal-task-title" style="letter-spacing: -1px;">LOADING...</h2>
-                            <div class="bg-light border p-3 mb-4 font-monospace small" style="border-color: var(--brut-black) !important; box-shadow: inset 2px 2px 0px rgba(0,0,0,0.1);">
-                                <p class="mb-0" id="modal-task-desc" style="white-space: pre-wrap;">LOADING...</p>
-                            </div>
-                            
-                            <table class="table table-sm mb-0 font-monospace small" style="border-color: var(--brut-black);">
-                                <tbody>
-                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">PUB_ID</td><td class="fw-bold" id="modal-task-pub" style="border-color: var(--brut-black);">--</td></tr>
-                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">START_T</td><td class="fw-bold" id="modal-task-start" style="border-color: var(--brut-black);">--</td></tr>
-                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">REQ_CAP</td><td class="fw-bold text-danger" style="border-color: var(--brut-black);"><span id="modal-task-cap">0</span> UNITS</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div class="col-md-5 p-4 d-flex flex-column justify-content-center align-items-center bg-light">
-                            <span class="status-label">CAPABILITY_RADAR</span>
-                            <div style="width: 100%; max-width: 220px;" class="mb-4">
-                                <canvas id="studentRadarChart"></canvas>
-                            </div>
-                            
-                            <div class="w-100 p-3 border text-center" style="background: var(--brut-white); border-color: var(--brut-black) !important;">
-                                <span class="d-block font-monospace small fw-bold mb-2">EXPECTED_YIELD</span>
-                                <h3 class="fw-black m-0"><span id="modal-task-time">0</span>H / <span id="modal-task-coins" class="text-danger">0</span><i class="bi bi-circle-square ms-1 fs-5 text-danger"></i></h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer p-3">
-                    <button type="button" class="btn btn-brut px-4" data-bs-dismiss="modal">CANCEL</button>
-                    <button type="button" class="btn btn-brut btn-brut-red px-5" id="btn-modal-accept">EXECUTE (接取)</button>
-                </div>
             </div>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

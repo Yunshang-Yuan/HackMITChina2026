@@ -16,13 +16,19 @@ body.dark-mode {
     --brut-red: #ff473e;
 }
 
-/* Bootstrap 暗黑模式兼容适配 */
+/* Bootstrap 暗黑模式兼容适配 - 修复了原先 * 选择器破坏阴影的问题 */
 body.dark-mode .bg-light { background-color: #222222 !important; color: var(--brut-black) !important; }
 body.dark-mode .bg-white { background-color: var(--brut-white) !important; color: var(--brut-black) !important; }
 body.dark-mode .text-dark { color: var(--brut-black) !important; }
 body.dark-mode .bg-dark { background-color: var(--brut-black) !important; color: var(--brut-white) !important; }
 body.dark-mode .text-muted { color: #888888 !important; }
-body.dark-mode * { border-color: var(--brut-black) !important; }
+/* 仅针对显式调用的 Bootstrap 边框类进行暗色替换，保留原有的彩色和组件边框 */
+body.dark-mode .border, 
+body.dark-mode .border-top, 
+body.dark-mode .border-end, 
+body.dark-mode .border-bottom { 
+    border-color: var(--brut-black) !important; 
+}
 
 /* 基础全局样式 */
 body {
@@ -172,6 +178,7 @@ body {
     text-transform: uppercase; 
     letter-spacing: 1px; 
     border: none; 
+    vertical-align: middle; /* 新增这行，强制垂直居中 */
 }
 .brut-table td { 
     border-bottom: 1px solid var(--brut-black); 
@@ -194,4 +201,28 @@ body.dark-mode .swal2-popup.brut-modal {
 .modal-header, .modal-footer { 
     border-color: var(--brut-black) !important; 
     background: var(--brut-white); 
+}
+
+/* --- 个人进程表格专门统一样式 --- */
+/* 将表格内所有文字统一为等宽字体 (Action列风格) */
+.brut-table td {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+/* 保护 UPLOAD LOG 按钮不被强行改成等宽字体，保持系统默认按钮字体 */
+.brut-table td .btn {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.875rem;
+}
+
+/* 统一状态标签的宽度和文字居中 */
+.status-badge {
+    display: inline-block;
+    width: 135px; /* 强制所有标签同宽 */
+    text-align: center;
+    padding: 6px 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
 }

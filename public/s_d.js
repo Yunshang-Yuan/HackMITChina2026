@@ -63,31 +63,54 @@ if (!userEmail || userRole !== 'student') {
 }
 
 // 加载学生个人数据统计
+// 替换原有的 loadUserProfile 函数
 async function loadUserProfile() {
     try {
         const response = await fetch(`${API_BASE_URL}/student/profile?email=${encodeURIComponent(userEmail)}`);
         const result = await response.json();
         if (result.success) {
+            // 更新大卡片数据
             document.getElementById('stat-time').textContent = result.data.totalTime;
             document.getElementById('stat-coins').textContent = result.data.totalCoins;
             document.getElementById('stat-rep-score').textContent = result.data.reputationScore;
             document.getElementById('stat-active').textContent = result.data.activeTasks;
             document.getElementById('stat-rep-badge').textContent = result.data.reputationText;
             if(result.data.reputationScore < 80) document.getElementById('stat-rep-badge').classList.add('bg-danger', 'text-white');
+            
+            // 同步更新右上角导航栏的精简数据
+            document.getElementById('nav-time').textContent = result.data.totalTime;
+            document.getElementById('nav-coins').textContent = result.data.totalCoins;
+            document.getElementById('nav-rep').textContent = result.data.reputationScore;
+            document.getElementById('nav-active').textContent = result.data.activeTasks;
         }
     } catch (error) { console.error("FETCH ERROR:", error); }
 }
 
 // 顶部导航切换逻辑
-document.getElementById('nav-hub').addEventListener('click', (e) => {
-    e.preventDefault();
-    document.getElementById('nav-hub').classList.add('active');
-    document.getElementById('nav-my-tasks').classList.remove('active');
-    document.getElementById('section-hub').classList.add('active');
-    document.getElementById('section-my-tasks').classList.remove('active');
-    document.getElementById('top-title').textContent = "TERMINAL // 任务大厅";
-    loadTasks();
-});
+// 替换掉原有的 document.getElementById('nav-hub').addEventListener... 这一坨代码
+const studentNavIds = ['nav-hub', 'nav-my-tasks', 'nav-retro', 'nav-my-data'];
+const studentSecIds = ['section-hub', 'section-my-tasks', 'section-retro', 'section-my-data'];
+const studentTitles = ["TERMINAL // 任务大厅", "TERMINAL // 个人进程", "TERMINAL // 志愿补录", "TERMINAL // 我的数据"];
+
+function switchStudentTab(activeIndex) {
+    studentNavIds.forEach((nid, idx) => {
+        const nav = document.getElementById(nid);
+        const sec = document.getElementById(studentSecIds[idx]);
+        if (idx === activeIndex) {
+            nav.classList.add('active');
+            sec.classList.add('active');
+            document.getElementById('top-title').textContent = studentTitles[idx];
+        } else {
+            nav.classList.remove('active');
+            sec.classList.remove('active');
+        }
+    });
+}
+
+document.getElementById('nav-hub').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(0); loadTasks(); });
+document.getElementById('nav-my-tasks').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(1); loadMyRecords(); });
+document.getElementById('nav-retro').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(2); });
+document.getElementById('nav-my-data').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(3); loadUserProfile(); });
 
 document.getElementById('nav-my-tasks').addEventListener('click', (e) => {
     e.preventDefault();
@@ -214,23 +237,33 @@ async function loadMyRecords() {
                 const date = new Date(record.createdAt).toLocaleDateString().replace(/\//g,'-');
                 let statusHtml = "", actionHtml = "";
 
+                // 注意这里统一加上了 status-badge 类
                 if (record.status === 'settled') {
-                    statusHtml = `<span class="badge bg-dark rounded-0 fw-bold border border-dark" style="color: var(--brut-white);">COMPLETED</span>`;
+                    statusHtml = `<span class="badge status-badge bg-dark rounded-0 border border-dark" style="color: var(--brut-white);">COMPLETED</span>`;
                     actionHtml = `<span class="fw-black">+${record.gainedTime}H / +${record.gainedBaseCoins + record.gainedBonusCoins}C</span>`;
                 } else if (record.status === 'pending_audit') {
-                    statusHtml = `<span class="badge bg-light text-dark rounded-0 fw-bold border border-dark">AWAITING_REVIEW</span>`;
-                    actionHtml = `<span class="font-monospace small fw-bold text-muted">AWAITING ADMIN</span>`;
+                    statusHtml = `<span class="badge status-badge bg-light text-dark rounded-0 border border-dark">AWAITING_REVIEW</span>`;
+                    actionHtml = `<span class="text-muted">AWAITING ADMIN</span>`;
                 } else if (record.status === 'anomaly') {
-                    statusHtml = `<span class="badge bg-danger text-white rounded-0 fw-bold border border-dark">SYS_ANOMALY</span>`;
-                    actionHtml = `<span class="font-monospace small fw-bold text-danger">CONTACT ADMIN</span>`;
+                    statusHtml = `<span class="badge status-badge bg-danger text-white rounded-0 border border-dark">SYS_ANOMALY</span>`;
+                    actionHtml = `<span class="text-danger">CONTACT ADMIN</span>`;
                 } else if (record.status === 'settling') {
-                    statusHtml = `<span class="badge bg-warning text-dark rounded-0 fw-bold border border-dark">REQ_LOGS</span>`;
+                    statusHtml = `<span class="badge status-badge bg-warning text-dark rounded-0 border border-dark">REQ_LOGS</span>`;
                     actionHtml = `<button class="btn btn-sm btn-brut py-1" onclick="submitReflection('${record._id}')">UPLOAD LOG</button>`;
                 } else {
-                    statusHtml = `<span class="badge bg-white text-dark rounded-0 fw-bold border border-dark">ACTIVE</span>`;
-                    actionHtml = `<span class="font-monospace small fw-bold text-muted">IN PROGRESS</span>`;
+                    statusHtml = `<span class="badge status-badge bg-white text-dark rounded-0 border border-dark">ACTIVE</span>`;
+                    actionHtml = `<span class="text-muted">IN PROGRESS</span>`;
                 }
-                tbody.innerHTML += `<tr><td class="fw-black text-uppercase">${task.title}</td><td class="fw-black">${task.duration}H / <span class="text-danger">${task.baseCoins}C</span></td><td class="font-monospace small fw-bold">${date}</td><td>${statusHtml}</td><td class="text-end pe-4">${actionHtml}</td></tr>`;
+                
+                // 将所有 td 设为 text-center 居中对齐
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-center fw-bold text-uppercase">${task.title}</td>
+                        <td class="text-center fw-bold">${task.duration}H / <span class="text-danger">${task.baseCoins}C</span></td>
+                        <td class="text-center">${date}</td>
+                        <td class="text-center">${statusHtml}</td>
+                        <td class="text-center">${actionHtml}</td>
+                    </tr>`;
             });
         } else { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 font-monospace fw-bold text-muted">NO LOGS FOUND.</td></tr>'; }
     } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger fw-black font-monospace">DATA FETCH FAILED.</td></tr>'; }
@@ -253,6 +286,44 @@ window.submitReflection = async function(recordId) {
         else { Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' }); }
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION FAILED.', icon: 'error' }); }
 };
+
+// 提交志愿补录表单逻辑
+document.getElementById('btn-submit-retro').addEventListener('click', async () => {
+    const eventName = document.getElementById('retro-desc').value;
+    const hours = document.getElementById('retro-hours').value;
+    const evidence = document.getElementById('retro-proof').value;
+
+    if (!eventName || !hours || !evidence) {
+        Swal.fire({ ...brutSwalObj, title: 'DATA_ERR', text: '请完整填写活动名称、时长及证明材料。', icon: 'warning' });
+        return;
+    }
+
+    // 假设你的后端补录接口是 /api/student/retro-entry
+    try {
+        Swal.fire({ ...brutSwalObj, title: 'UPLOADING...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        
+        const response = await fetch(`${API_BASE_URL}/student/retro-entry`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                studentEmail: userEmail,
+                eventName: eventName,
+                hours: parseFloat(hours),
+                evidence: evidence
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            Swal.fire({ ...brutSwalObj, title: 'SUBMITTED', text: '补录申请已提交，请等待管理员审核。', icon: 'success' });
+            document.getElementById('form-retro').reset();
+        } else {
+            Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
+        }
+    } catch (error) {
+        Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: '等待后端接口部署', icon: 'info' });
+    }
+});
 
 // 退出登录功能
 document.getElementById('btn-logout').addEventListener('click', async () => {

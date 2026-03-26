@@ -1,80 +1,101 @@
-// 全局配置与管理员权限校验
+// ================= 全局配置与权限校验 =================
 const API_BASE_URL = "http://106.14.147.100:3000/api";
 const userEmail = localStorage.getItem('userEmail');
 const userRole = localStorage.getItem('userRole');
 let globalStudentRecordsCache = [];
 
+const brutSwalObj = {
+    customClass: { popup: 'brut-modal', confirmButton: 'btn btn-brut btn-brut-red mx-2', cancelButton: 'btn btn-brut mx-2' },
+    buttonsStyling: false
+};
+const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: 'var(--brut-black)', color: 'var(--brut-white)', customClass: { popup: 'rounded-0 border border-white' }});
+
 if (!userEmail || userRole !== 'admin') {
-    alert("⚠️ 权限拦截：您未登录或没有管理员权限！");
-    window.location.href = "login.html";
+    Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '无管理员权限。' }).then(() => { window.location.href = "login.html"; });
 } else {
     document.getElementById('user-email-display').textContent = userEmail.split('@')[0];
     loadPendingTasks();
 }
 
-// 雷达图初始化与滑块联动更新
+// ================= 暗黑模式切换 =================
+const themeBtn = document.getElementById('btn-theme-toggle');
+if (localStorage.getItem('sys-theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    themeBtn.innerHTML = '<i class="bi bi-sun-fill"></i>';
+}
+themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('sys-theme', isDark ? 'dark' : 'light');
+    themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-stars-fill"></i>';
+    updateRadarTheme(isDark);
+});
+
+// ================= 雷达图初始化 =================
 let radarChart;
 const ctx = document.getElementById('radarChart').getContext('2d');
 function initRadarChart() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const lineColor = isDark ? '#f4f4f0' : '#000000';
     radarChart = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['执行力', '团队协作', '沟通表达', '领导力', '创新思维'],
-            datasets: [{
-                label: '能力维度要求',
-                data: [0, 0, 0, 0, 0],
-                backgroundColor: 'rgba(220, 53, 69, 0.4)',
-                borderColor: 'rgba(220, 53, 69, 1)',
-                pointBackgroundColor: 'rgba(220, 53, 69, 1)',
-                borderWidth: 2,
-            }]
+            labels: ['EXEC', 'TEAM', 'COMM', 'LEAD', 'INNO'],
+            datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: 'rgba(230, 33, 23, 0.2)', borderColor: '#e62117', pointBackgroundColor: '#e62117', borderWidth: 2 }]
         },
         options: {
-            scales: { r: { min: 0, max: 5, angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, pointLabels: { font: { size: 12, weight: 'bold' } }, ticks: { stepSize: 1, display: false } } },
+            scales: { r: { min: 0, max: 5, angleLines: { color: lineColor }, grid: { color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }, pointLabels: { font: { size: 10, weight: 'bold', family: 'Courier New' }, color: lineColor }, ticks: { stepSize: 1, display: false } } },
             plugins: { legend: { display: false } }
         }
     });
 }
 initRadarChart();
 
-const sliders = document.querySelectorAll('.dim-slider');
-sliders.forEach(slider => {
+function updateRadarTheme(isDark) {
+    if(!radarChart) return;
+    const lineColor = isDark ? '#f4f4f0' : '#000000';
+    radarChart.options.scales.r.angleLines.color = lineColor;
+    radarChart.options.scales.r.pointLabels.color = lineColor;
+    radarChart.options.scales.r.grid.color = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+    radarChart.update();
+}
+
+document.querySelectorAll('.dim-slider').forEach(slider => {
     slider.addEventListener('input', (e) => {
         document.getElementById(`val-${e.target.id}`).textContent = e.target.value;
-        const values = [ document.getElementById('dim1').value, document.getElementById('dim2').value, document.getElementById('dim3').value, document.getElementById('dim4').value, document.getElementById('dim5').value ];
-        radarChart.data.datasets[0].data = values;
+        radarChart.data.datasets[0].data = [ document.getElementById('dim1').value, document.getElementById('dim2').value, document.getElementById('dim3').value, document.getElementById('dim4').value, document.getElementById('dim5').value ];
         radarChart.update();
     });
 });
 
-// 侧边栏导航切换与页面渲染
-const navIds = ['nav-pending', 'nav-publish', 'nav-manage', 'nav-assess'];
-const secIds = ['section-pending', 'section-publish', 'section-manage', 'section-assess'];
-const titles = ["工作台 / 待办审批", "工作台 / 发布官方任务", "工作台 / 官方任务进度", "工作台 / 官方考核结算"];
+// ================= 导航切换逻辑 =================
+const navIds = ['nav-pending', 'nav-retro', 'nav-publish', 'nav-manage', 'nav-assess', 'nav-students'];
+const secIds = ['section-pending', 'section-retro', 'section-publish', 'section-manage', 'section-assess', 'section-students'];
+const titles = ["TERMINAL // 任务上架审批", "TERMINAL // 志愿补录审批", "TERMINAL // 发布官方任务", "TERMINAL // 官方任务进度", "TERMINAL // 官方考核结算", "TERMINAL // 全校学生数据"];
 
 function switchTab(activeIndex) {
     navIds.forEach((nid, idx) => {
         const nav = document.getElementById(nid);
         const sec = document.getElementById(secIds[idx]);
         if (idx === activeIndex) {
-            nav.classList.add('active', 'bg-success', 'text-white');
-            nav.classList.remove('text-white');
+            nav.classList.add('active');
             sec.classList.add('active');
             document.getElementById('top-title').textContent = titles[idx];
         } else {
-            nav.classList.remove('active', 'bg-success', 'text-white');
-            nav.classList.add('text-white');
+            nav.classList.remove('active');
             sec.classList.remove('active');
         }
     });
 }
 
-document.getElementById('nav-pending').addEventListener('click', (e) => { e.preventDefault(); switchTab(0); loadPendingTasks(); });
-document.getElementById('nav-publish').addEventListener('click', (e) => { e.preventDefault(); switchTab(1); });
-document.getElementById('nav-manage').addEventListener('click', (e) => { e.preventDefault(); switchTab(2); loadMyTasks(); });
-document.getElementById('nav-assess').addEventListener('click', (e) => { e.preventDefault(); switchTab(3); loadAssessRecords(); });
+document.getElementById('nav-pending').onclick = (e) => { e.preventDefault(); switchTab(0); loadPendingTasks(); };
+document.getElementById('nav-retro').onclick = (e) => { e.preventDefault(); switchTab(1); loadRetroEntries(); };
+document.getElementById('nav-publish').onclick = (e) => { e.preventDefault(); switchTab(2); };
+document.getElementById('nav-manage').onclick = (e) => { e.preventDefault(); switchTab(3); loadMyTasks(); };
+document.getElementById('nav-assess').onclick = (e) => { e.preventDefault(); switchTab(4); loadAssessRecords(); };
+document.getElementById('nav-students').onclick = (e) => { e.preventDefault(); switchTab(5); loadAllStudents(); };
 
-// 待办任务审批：加载列表、审核通过/驳回
+// ================= 1. 任务上架审批 =================
 async function loadPendingTasks() {
     const tbody = document.getElementById('pending-table-body');
     try {
@@ -84,51 +105,97 @@ async function loadPendingTasks() {
             document.getElementById('pending-count').textContent = result.data.length;
             tbody.innerHTML = ''; 
             result.data.forEach(task => {
-                const date = new Date(task.createdAt).toLocaleString();
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="ps-4 fw-bold">${task.publisherEmail || '未知'}</td>
-                        <td><span class="badge bg-warning text-dark me-1">待审</span> ${task.title}</td>
-                        <td class="fw-bold text-primary">${task.duration}h / <i class="bi bi-coin text-warning"></i>${task.baseCoins}</td>
-                        <td>${task.capacity} 人</td>
-                        <td class="text-muted small">${date}</td>
-                        <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-outline-danger me-1" onclick="handleAudit('${task._id}', 'reject')"><i class="bi bi-x"></i> 驳回</button>
-                            <button class="btn btn-sm btn-success" onclick="handleAudit('${task._id}', 'approve')"><i class="bi bi-check2"></i> 通过</button>
-                        </td>
-                    </tr>
-                `;
+                const date = new Date(task.createdAt).toLocaleDateString();
+                tbody.innerHTML += `<tr>
+                    <td class="ps-4 fw-bold font-monospace">${task.publisherEmail.split('@')[0]}</td>
+                    <td class="fw-bold text-uppercase">${task.title}</td>
+                    <td class="font-monospace fw-bold">${task.duration}H / <span class="text-danger">${task.baseCoins}C</span></td>
+                    <td class="font-monospace fw-bold">${task.capacity} PROC</td>
+                    <td class="font-monospace small">${date}</td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-sm btn-brut py-1 me-1" onclick="handleAudit('${task._id}', 'reject')">REJECT</button>
+                        <button class="btn btn-sm btn-brut btn-brut-red py-1" onclick="handleAudit('${task._id}', 'approve')">APPROVE</button>
+                    </td>
+                </tr>`;
             });
         } else {
             document.getElementById('pending-count').textContent = "0";
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">🎉 太棒了！当前没有任何待办任务。</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 font-monospace fw-bold text-muted">NO PENDING TASKS.</td></tr>';
         }
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">加载失败，请检查网络。</td></tr>'; }
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger fw-bold font-monospace">FETCH FAILED.</td></tr>'; }
 }
 
 window.handleAudit = async function(taskId, action) {
     let reason = "";
     if (action === 'reject') {
-        reason = prompt("请输入驳回原因 (必填)：");
-        if (!reason) return; 
-    } else { if(!confirm("确定要让这个任务上架到学生大厅吗？")) return; }
+        const { value: inputReason } = await Swal.fire({ ...brutSwalObj, title: 'REJECT REASON', input: 'text', inputPlaceholder: 'INPUT REASON...', showCancelButton: true });
+        if (!inputReason) return; reason = inputReason;
+    } else {
+        const res = await Swal.fire({ ...brutSwalObj, title: 'APPROVE TASK?', text: '任务将直接上架大厅。', icon: 'warning', showCancelButton: true });
+        if (!res.isConfirmed) return;
+    }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/audit-task`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId, action, reason })
-        });
+        const response = await fetch(`${API_BASE_URL}/admin/audit-task`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId, action, reason }) });
         const data = await response.json();
-        if (data.success) { alert("✅ " + data.message); loadPendingTasks(); } 
-        else { alert("⚠️ 操作失败：" + data.message); }
-    } catch (error) { alert("请求出错，请检查服务器！"); }
+        if (data.success) { Toast.fire({ icon: 'success', title: 'EXECUTION SUCCESS.' }); loadPendingTasks(); } 
+        else { Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' }); }
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
 
-// 管理员发布官方任务（免审核）
+// ================= 2. 志愿补录审批 (新功能) =================
+async function loadRetroEntries() {
+    const tbody = document.getElementById('retro-table-body');
+    // 注意：这里需要你后端提供 /api/admin/retro-entries 接口
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/retro-entries`);
+        const result = await response.json();
+        if (result.success && result.data.length > 0) {
+            document.getElementById('retro-count').textContent = result.data.length;
+            tbody.innerHTML = ''; 
+            result.data.forEach(entry => {
+                const date = new Date(entry.createdAt).toLocaleDateString();
+                tbody.innerHTML += `<tr>
+                    <td class="ps-4 fw-bold font-monospace">${entry.studentEmail.split('@')[0]}</td>
+                    <td class="fw-bold text-uppercase">${entry.eventName}</td>
+                    <td class="font-monospace fw-bold text-danger">${entry.hours}H</td>
+                    <td><button class="btn btn-sm btn-brut py-1" onclick="viewEvidence('${entry.evidence}')">VIEW_PROOF</button></td>
+                    <td class="font-monospace small">${date}</td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-sm btn-brut py-1 me-1" onclick="handleRetroAudit('${entry._id}', 'reject')">REJECT</button>
+                        <button class="btn btn-sm btn-brut btn-brut-red py-1" onclick="handleRetroAudit('${entry._id}', 'approve')">APPROVE</button>
+                    </td>
+                </tr>`;
+            });
+        } else {
+            document.getElementById('retro-count').textContent = "0";
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 font-monospace fw-bold text-muted">NO PENDING RETRO ENTRIES.</td></tr>';
+        }
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger fw-bold font-monospace">FETCH FAILED (WAITING FOR API).</td></tr>'; }
+}
+
+window.viewEvidence = function(evidenceStr) {
+    Swal.fire({ ...brutSwalObj, title: 'EVIDENCE_DATA', text: evidenceStr, confirmButtonText: 'CLOSE' });
+}
+
+window.handleRetroAudit = async function(entryId, action) {
+    // 调用后端接口审批补录，逻辑同上
+    const res = await Swal.fire({ ...brutSwalObj, title: 'CONFIRM ACTION?', icon: 'warning', showCancelButton: true });
+    if (!res.isConfirmed) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/audit-retro`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entryId, action }) });
+        const data = await response.json();
+        if (data.success) { Toast.fire({ icon: 'success', title: 'PROCESSED.' }); loadRetroEntries(); } 
+        else { Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' }); }
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'API ENDPOINT NOT READY YET.', icon: 'info' }); }
+}
+
+// ================= 3. 发布官方任务 =================
 document.getElementById('btn-admin-publish').addEventListener('click', async (e) => {
     e.preventDefault();
     const startDate = document.getElementById('task-start').value;
     const endDate = document.getElementById('task-end').value;
-    if (!startDate || !endDate || new Date(endDate) <= new Date(startDate)) return alert("⚠️ 任务时间填写不合法！");
+    if (!startDate || !endDate || new Date(endDate) <= new Date(startDate)) return Swal.fire({ ...brutSwalObj, title: 'DATA_ERR', text: '时间冲突。', icon: 'error' });
 
     const payload = {
         title: document.getElementById('task-title').value, desc: document.getElementById('task-desc').value,
@@ -142,16 +209,16 @@ document.getElementById('btn-admin-publish').addEventListener('click', async (e)
         const response = await fetch(`${API_BASE_URL}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await response.json();
         if (data.success) {
-            alert("🚀 " + data.message);
+            Swal.fire({ ...brutSwalObj, title: 'DEPLOYED', text: data.message, icon: 'success' });
             document.getElementById('admin-task-form').reset();
             radarChart.data.datasets[0].data = [0,0,0,0,0]; radarChart.update();
             document.querySelectorAll('.dim-slider').forEach(s => document.getElementById(`val-${s.id}`).textContent = 0);
             document.getElementById('nav-manage').click();
-        } else alert("发布失败：" + data.message);
-    } catch (error) { alert("发布失败，请检查服务器。"); }
+        } else Swal.fire({ ...brutSwalObj, title: 'FAILED', text: data.message, icon: 'error' });
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION FAILED.', icon: 'error' }); }
 });
 
-// 加载管理员发布的官方任务进度
+// ================= 4. 官方任务进度 =================
 async function loadMyTasks() {
     const tbody = document.getElementById('my-tasks-body');
     try {
@@ -161,79 +228,70 @@ async function loadMyTasks() {
             tbody.innerHTML = '';
             result.data.forEach(task => {
                 const dateObj = new Date(task.endDate);
-                let statusBadge = task.status === 'published' ? `<span class="badge bg-success">进行中</span>` :
-                                  task.status === 'settling' ? `<span class="badge bg-info text-dark">进入结算期</span>` : `<span class="badge bg-secondary">未知</span>`;
-                
+                let statusBadge = task.status === 'published' ? `ACTIVE` : (task.status === 'settling' ? `SETTLING` : `UNKNOWN`);
                 tbody.innerHTML += `<tr>
-                    <td class="fw-bold">${task.title} <span class="badge bg-danger ms-1 small">官方</span></td>
-                    <td><span class="text-primary fw-bold">${task.duration}h</span> / 保底 <i class="bi bi-coin text-warning"></i>${task.baseCoins}</td>
-                    <td class="text-muted small">${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                    <td>${statusBadge}</td>
+                    <td class="ps-4 fw-bold text-uppercase">${task.title}</td>
+                    <td class="font-monospace fw-bold">${task.duration}H / <span class="text-danger">${task.baseCoins}C</span></td>
+                    <td class="font-monospace small">${dateObj.toLocaleDateString()}</td>
+                    <td class="font-monospace fw-bold">${statusBadge}</td>
                 </tr>`;
             });
-        } else tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">您还没有发布过官方任务。</td></tr>';
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">加载失败，请检查网络。</td></tr>'; }
+        } else tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 font-monospace fw-bold text-muted">NO OFFICIAL TASKS DEPLOYED.</td></tr>';
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
 }
 
-// 加载学生任务考核记录
+// ================= 5. 官方考核结算 =================
 async function loadAssessRecords() {
     const tbody = document.getElementById('audit-records-body');
     try {
         const response = await fetch(`${API_BASE_URL}/teacher/student-records?email=${encodeURIComponent(userEmail)}`);
         const result = await response.json();
-
         if (result.success && result.data.length > 0) {
             globalStudentRecordsCache = result.data;
             tbody.innerHTML = '';
-            
             result.data.forEach(record => {
                 const task = record.taskId; 
                 if(!task) return; 
-
                 let statusHtml = "", actionHtml = "";
-                let earnText = `<span class="text-success fw-bold">${record.gainedTime}h</span> / <span class="text-warning fw-bold">${record.gainedBaseCoins + record.gainedBonusCoins}币</span>`;
-                if(record.deductedTime > 0) earnText += `<br><small class="text-danger">已扣除 ${record.deductedTime}h (${record.deductReason})</small>`;
+                let earnText = `${record.gainedTime}H / <span class="text-danger">${record.gainedBaseCoins + record.gainedBonusCoins}C</span>`;
 
-                if (record.status === 'accepted') { statusHtml = `<span class="badge bg-secondary">任务进行中</span>`; actionHtml = `<span class="text-muted small">不可操作</span>`; } 
+                if (record.status === 'accepted') { statusHtml = `ACTIVE`; actionHtml = `LOCKED`; } 
                 else if (record.status === 'settling') {
-                    statusHtml = `<span class="badge bg-info text-dark">待交心得 (3天核减期)</span>`;
-                    actionHtml = `<button class="btn btn-sm btn-outline-danger me-1" onclick="deductTime('${record._id}')">扣工时</button> <button class="btn btn-sm btn-outline-dark" onclick="markAnomaly('${record._id}')">标记异常</button>`;
+                    statusHtml = `REQ_LOGS`;
+                    actionHtml = `<button class="btn btn-sm btn-brut py-1 me-1" onclick="deductTime('${record._id}')">-HOURS</button><button class="btn btn-sm btn-brut py-1" onclick="markAnomaly('${record._id}')">FLAG</button>`;
                 } 
                 else if (record.status === 'pending_audit') {
-                    statusHtml = `<span class="badge bg-primary">心得已交 (待批阅)</span>`;
-                    actionHtml = `<button class="btn btn-sm btn-danger fw-bold" onclick="openReviewModal('${record._id}')">批阅发奖金</button>`;
+                    statusHtml = `AWAIT_REVIEW`;
+                    actionHtml = `<button class="btn btn-sm btn-brut btn-brut-red py-1" onclick="openReviewModal('${record._id}')">REVIEW</button>`;
                 } 
-                else if (record.status === 'settled') { statusHtml = `<span class="badge bg-success">彻底完结</span>`; actionHtml = `<span class="text-success small"><i class="bi bi-check-circle"></i> 已结算</span>`; } 
-                else if (record.status === 'anomaly') { statusHtml = `<span class="badge bg-danger">异常纠纷中</span>`; actionHtml = `<span class="text-danger small">线下处理</span>`; }
+                else if (record.status === 'settled') { statusHtml = `SETTLED`; actionHtml = `DONE`; } 
+                else if (record.status === 'anomaly') { statusHtml = `ANOMALY`; actionHtml = `FLAGGED`; }
 
                 tbody.innerHTML += `<tr>
-                    <td class="fw-bold">${record.studentEmail.split('@')[0]}</td>
-                    <td class="text-muted small">${task.title}</td>
-                    <td>${earnText}</td>
-                    <td>${statusHtml}</td>
-                    <td class="text-end pe-4">${actionHtml}</td>
+                    <td class="ps-4 font-monospace fw-bold">${record.studentEmail.split('@')[0]}</td>
+                    <td class="fw-bold text-uppercase text-muted">${task.title}</td>
+                    <td class="font-monospace fw-bold">${earnText}</td>
+                    <td class="font-monospace fw-bold">${statusHtml}</td>
+                    <td class="text-end pe-4 font-monospace">${actionHtml}</td>
                 </tr>`;
             });
-        } else tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">目前还没有学生接取您的官方任务。</td></tr>';
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">加载失败。</td></tr>'; }
+        } else tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 font-monospace fw-bold text-muted">NO RECORDS FOUND.</td></tr>';
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
 }
 
-// 管理员操作：扣除学生工时
 window.deductTime = async function(recordId) {
-    const hours = parseFloat(prompt("你要扣除该学生几小时的工时？(请输入数字)"));
-    if (isNaN(hours) || hours <= 0) return;
-    const reason = prompt("请输入扣除理由 (必填，如：迟到早退/摸鱼)：");
-    if (!reason) return alert("必须填写扣除理由！");
-
+    const { value: hours } = await Swal.fire({ ...brutSwalObj, title: 'DEDUCT HOURS', input: 'number', inputAttributes: { step: 0.5 }, showCancelButton: true });
+    if (!hours || hours <= 0) return;
+    const { value: reason } = await Swal.fire({ ...brutSwalObj, title: 'REASON', input: 'text', showCancelButton: true });
+    if (!reason) return;
     try {
         const response = await fetch(`${API_BASE_URL}/teacher/deduct-time`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, deductHours: hours, reason }) });
         const data = await response.json();
-        alert(data.success ? "✅ " + data.message : "⚠️ " + data.message);
-        if (data.success) loadAssessRecords(); 
-    } catch (error) { alert("无法连接到云服务器！"); }
+        if (data.success) { Toast.fire({ icon: 'success', title: 'DEDUCTED.' }); loadAssessRecords(); } 
+        else Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
 
-// 打开心得批阅弹窗
 window.openReviewModal = function(recordId) {
     const record = globalStudentRecordsCache.find(r => r._id === recordId);
     if (!record) return;
@@ -244,7 +302,6 @@ window.openReviewModal = function(recordId) {
     new bootstrap.Modal(document.getElementById('reviewModal')).show();
 };
 
-// 提交批阅并发放奖金
 document.getElementById('btn-submit-review').addEventListener('click', async () => {
     const recordId = document.getElementById('modal-current-record-id').value;
     const bonusAmount = parseInt(document.getElementById('modal-bonus-input').value) || 0;
@@ -252,26 +309,61 @@ document.getElementById('btn-submit-review').addEventListener('click', async () 
         const response = await fetch(`${API_BASE_URL}/teacher/award-bonus`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, bonusAmount }) });
         const data = await response.json();
         if (data.success) {
-            alert("🎉 " + data.message);
+            Toast.fire({ icon: 'success', title: 'AUTHORIZED.' });
             bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
             loadAssessRecords(); 
-        } else alert("⚠️ 提交失败：" + data.message);
-    } catch (error) { alert("无法连接到云服务器！"); }
+        } else Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 });
 
-// 标记任务记录为异常
 window.markAnomaly = async function(recordId) {
-    if(!confirm("确定要将该记录挂起为异常吗？")) return;
-    const reason = prompt("请输入标记异常的原因：") || "未填原因";
+    const res = await Swal.fire({ ...brutSwalObj, title: 'FLAG AS ANOMALY?', icon: 'warning', showCancelButton: true });
+    if(!res.isConfirmed) return;
+    const { value: reason } = await Swal.fire({ ...brutSwalObj, title: 'REASON', input: 'text', showCancelButton: true });
     try {
-        const response = await fetch(`${API_BASE_URL}/teacher/mark-anomaly`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, reason }) });
+        const response = await fetch(`${API_BASE_URL}/teacher/mark-anomaly`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, reason: reason||"N/A" }) });
         const data = await response.json();
-        alert(data.success ? "✅ " + data.message : "⚠️ " + data.message);
-        if (data.success) loadAssessRecords(); 
-    } catch (error) { alert("无法连接！"); }
+        if (data.success) { Toast.fire({ icon: 'success', title: 'FLAGGED.' }); loadAssessRecords(); }
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
 
-// 退出登录功能
-document.getElementById('btn-logout').addEventListener('click', () => {
-    if(confirm("确定退出？")) { localStorage.clear(); window.location.href = 'login.html'; }
+// ================= 6. 全校学生数据 (新功能) =================
+async function loadAllStudents() {
+    const tbody = document.getElementById('all-students-body');
+    // 注意：需要后端提供 /api/admin/all-students 接口
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/all-students`);
+        const result = await response.json();
+        if (result.success && result.data.length > 0) {
+            tbody.innerHTML = '';
+            result.data.forEach(student => {
+                tbody.innerHTML += `<tr>
+                    <td class="ps-4 font-monospace fw-bold">${student.email.split('@')[0]}</td>
+                    <td class="text-center font-monospace fw-bold">${student.totalTime}H</td>
+                    <td class="text-center font-monospace fw-bold text-danger">${student.totalCoins}C</td>
+                    <td class="text-center font-monospace fw-bold">${student.reputationScore}</td>
+                    <td class="text-center font-monospace fw-bold">${student.activeTasks} PROC</td>
+                </tr>`;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 font-monospace fw-bold text-muted">NO STUDENT DATA FOUND.</td></tr>';
+        }
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED (WAITING FOR API).</td></tr>'; }
+}
+
+// ================= 系统设置按钮交互 =================
+document.getElementById('btn-settings').addEventListener('click', () => {
+    Swal.fire({
+        ...brutSwalObj,
+        title: 'SYS.SETTINGS',
+        text: 'MODULE UNDER CONSTRUCTION (系统配置模块施工中，准备接入后续扩展功能)',
+        icon: 'info',
+        confirmButtonText: 'ACKNOWLEDGE'
+    });
+});
+
+// ================= 退出登录 =================
+document.getElementById('btn-logout').addEventListener('click', async () => {
+    const res = await Swal.fire({ ...brutSwalObj, title: 'TERMINATE SESSION?', icon: 'warning', showCancelButton: true });
+    if(res.isConfirmed) { localStorage.clear(); window.location.href = 'login.html'; }
 });

@@ -1,91 +1,102 @@
-// 全局配置与权限校验：API地址、用户信息获取、权限拦截
+// ================= 全局配置与权限校验 =================
 const API_BASE_URL = "http://106.14.147.100:3000/api";
 const userEmail = localStorage.getItem('userEmail');
 const userRole = localStorage.getItem('userRole');
 let globalStudentRecordsCache = [];
 
+const brutSwalObj = {
+    customClass: { popup: 'brut-modal', confirmButton: 'btn btn-brut btn-brut-red mx-2', cancelButton: 'btn btn-brut mx-2' },
+    buttonsStyling: false
+};
+const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: 'var(--brut-black)', color: 'var(--brut-white)', customClass: { popup: 'rounded-0 border border-white' }});
+
 if (!userEmail || userRole !== 'teacher') {
-    alert("⚠️ 权限拦截：您未登录或没有教师权限！");
-    window.location.href = "login.html";
+    Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '无教师权限。' }).then(() => { window.location.href = "login.html"; });
 } else {
     document.getElementById('user-email-display').textContent = userEmail.split('@')[0];
 }
 
-// 雷达图引擎：初始化五维能力雷达图、滑块联动更新图表
+// ================= 暗黑模式切换 =================
+const themeBtn = document.getElementById('btn-theme-toggle');
+if (localStorage.getItem('sys-theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    themeBtn.innerHTML = '<i class="bi bi-sun-fill"></i>';
+}
+themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('sys-theme', isDark ? 'dark' : 'light');
+    themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-stars-fill"></i>';
+    updateRadarTheme(isDark);
+});
+
+// ================= 雷达图初始化 =================
 let radarChart;
 const ctx = document.getElementById('radarChart').getContext('2d');
 function initRadarChart() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const lineColor = isDark ? '#f4f4f0' : '#000000';
     radarChart = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['执行力', '团队协作', '沟通表达', '领导力', '创新思维'],
-            datasets: [{
-                label: '能力维度要求',
-                data: [0, 0, 0, 0, 0],
-                backgroundColor: 'rgba(255, 193, 7, 0.4)',
-                borderColor: 'rgba(255, 193, 7, 1)',
-                pointBackgroundColor: 'rgba(255, 193, 7, 1)',
-                borderWidth: 2,
-            }]
+            labels: ['EXEC', 'TEAM', 'COMM', 'LEAD', 'INNO'],
+            datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: 'rgba(230, 33, 23, 0.2)', borderColor: '#e62117', pointBackgroundColor: '#e62117', borderWidth: 2 }]
         },
         options: {
-            scales: {
-                r: { min: 0, max: 5, angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, pointLabels: { font: { size: 12, weight: 'bold' } }, ticks: { stepSize: 1, display: false } }
-            },
+            scales: { r: { min: 0, max: 5, angleLines: { color: lineColor }, grid: { color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }, pointLabels: { font: { size: 10, weight: 'bold', family: 'Courier New' }, color: lineColor }, ticks: { stepSize: 1, display: false } } },
             plugins: { legend: { display: false } }
         }
     });
 }
 initRadarChart();
 
-const sliders = document.querySelectorAll('.dim-slider');
-sliders.forEach(slider => {
+function updateRadarTheme(isDark) {
+    if(!radarChart) return;
+    const lineColor = isDark ? '#f4f4f0' : '#000000';
+    radarChart.options.scales.r.angleLines.color = lineColor;
+    radarChart.options.scales.r.pointLabels.color = lineColor;
+    radarChart.options.scales.r.grid.color = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+    radarChart.update();
+}
+
+document.querySelectorAll('.dim-slider').forEach(slider => {
     slider.addEventListener('input', (e) => {
         document.getElementById(`val-${e.target.id}`).textContent = e.target.value;
-        const values = [
-            document.getElementById('dim1').value, document.getElementById('dim2').value,
-            document.getElementById('dim3').value, document.getElementById('dim4').value, document.getElementById('dim5').value
-        ];
-        radarChart.data.datasets[0].data = values;
+        radarChart.data.datasets[0].data = [ document.getElementById('dim1').value, document.getElementById('dim2').value, document.getElementById('dim3').value, document.getElementById('dim4').value, document.getElementById('dim5').value ];
         radarChart.update();
     });
 });
 
-// 导航切换逻辑：侧边栏导航与页面模块切换、标题更新
+// ================= 导航切换逻辑 =================
 const navIds = ['nav-publish', 'nav-manage', 'nav-audit'];
 const secIds = ['section-publish', 'section-manage', 'section-audit'];
+const titles = ["TERMINAL // 发布新任务", "TERMINAL // 任务进度管理", "TERMINAL // 考核与结算"];
 
-function switchTab(activeNavId) {
+function switchTab(activeIndex) {
     navIds.forEach((nid, idx) => {
         const nav = document.getElementById(nid);
         const sec = document.getElementById(secIds[idx]);
-        if (nid === activeNavId) {
-            nav.classList.add('active', 'bg-warning', 'text-dark');
-            nav.classList.remove('text-white');
+        if (idx === activeIndex) {
+            nav.classList.add('active');
             sec.classList.add('active');
+            document.getElementById('top-title').textContent = titles[idx];
         } else {
-            nav.classList.remove('active', 'bg-warning', 'text-dark');
-            nav.classList.add('text-white');
+            nav.classList.remove('active');
             sec.classList.remove('active');
         }
     });
 }
 
-document.getElementById('nav-publish').addEventListener('click', (e) => { e.preventDefault(); switchTab('nav-publish'); document.getElementById('top-title').textContent = "工作台 / 发布任务"; });
-document.getElementById('nav-manage').addEventListener('click', (e) => { e.preventDefault(); switchTab('nav-manage'); document.getElementById('top-title').textContent = "工作台 / 任务进度管理"; loadMyTasks(); });
-document.getElementById('nav-audit').addEventListener('click', (e) => { 
-    e.preventDefault(); 
-    switchTab('nav-audit'); 
-    document.getElementById('top-title').textContent = "工作台 / 学生考核与结算"; 
-    loadAuditRecords();
-});
+document.getElementById('nav-publish').onclick = (e) => { e.preventDefault(); switchTab(0); };
+document.getElementById('nav-manage').onclick = (e) => { e.preventDefault(); switchTab(1); loadMyTasks(); };
+document.getElementById('nav-audit').onclick = (e) => { e.preventDefault(); switchTab(2); loadAuditRecords(); };
 
-// 任务发布功能：表单提交、参数校验、调用发布任务接口
+// ================= 任务发布 =================
 document.getElementById('btn-submit-task').addEventListener('click', async (e) => {
     e.preventDefault();
     const startDate = document.getElementById('task-start').value;
     const endDate = document.getElementById('task-end').value;
-    if (!startDate || !endDate || new Date(endDate) <= new Date(startDate)) return alert("⚠️ 任务的时间填写不合法哦！");
+    if (!startDate || !endDate || new Date(endDate) <= new Date(startDate)) return Swal.fire({ ...brutSwalObj, title: 'DATA_ERR', text: '时间冲突。', icon: 'error' });
 
     const payload = {
         title: document.getElementById('task-title').value, desc: document.getElementById('task-desc').value,
@@ -99,16 +110,16 @@ document.getElementById('btn-submit-task').addEventListener('click', async (e) =
         const response = await fetch(`${API_BASE_URL}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await response.json();
         if (data.success) {
-            alert("✅ " + data.message);
+            Swal.fire({ ...brutSwalObj, title: 'DEPLOYED', text: data.message, icon: 'success' });
             document.getElementById('task-publish-form').reset();
             radarChart.data.datasets[0].data = [0,0,0,0,0]; radarChart.update();
             document.querySelectorAll('.dim-slider').forEach(s => document.getElementById(`val-${s.id}`).textContent = 0);
             document.getElementById('nav-manage').click();
-        } else alert("发布失败：" + data.message);
-    } catch (error) { alert("无法连接到云服务器！"); }
+        } else Swal.fire({ ...brutSwalObj, title: 'FAILED', text: data.message, icon: 'error' });
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION FAILED.', icon: 'error' }); }
 });
 
-// 加载教师发布任务：获取并渲染教师自己发布的所有任务
+// ================= 加载任务进度 =================
 async function loadMyTasks() {
     const tbody = document.getElementById('my-tasks-body');
     try {
@@ -118,22 +129,22 @@ async function loadMyTasks() {
             tbody.innerHTML = '';
             result.data.forEach(task => {
                 const dateObj = new Date(task.endDate);
-                let statusBadge = task.status === 'pending_audit' ? `<span class="badge bg-warning text-dark">待上架审核</span>` :
-                                  task.status === 'published' ? `<span class="badge bg-success">进行中</span>` :
-                                  task.status === 'settling' ? `<span class="badge bg-info text-dark">进入结算期</span>` : `<span class="badge bg-danger">已驳回</span>`;
+                let statusBadge = task.status === 'pending_audit' ? `AWAITING_ADMIN` :
+                                  task.status === 'published' ? `ACTIVE` :
+                                  task.status === 'settling' ? `SETTLING` : `REJECTED`;
                 
                 tbody.innerHTML += `<tr>
-                    <td class="fw-bold">${task.title}</td>
-                    <td><span class="text-primary fw-bold">${task.duration}h</span> / 保底 <i class="bi bi-coin text-warning"></i>${task.baseCoins}</td>
-                    <td class="text-muted small">${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                    <td>${statusBadge}</td>
+                    <td class="ps-4 fw-bold text-uppercase">${task.title}</td>
+                    <td class="font-monospace fw-bold">${task.duration}H / <span class="text-danger">${task.baseCoins}C</span></td>
+                    <td class="font-monospace small">${dateObj.toLocaleDateString()}</td>
+                    <td class="font-monospace fw-bold">${statusBadge}</td>
                 </tr>`;
             });
-        } else tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">您还没有发布过任何任务哦。</td></tr>';
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">加载失败，请检查网络。</td></tr>'; }
+        } else tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 font-monospace fw-bold text-muted">NO TASKS DEPLOYED.</td></tr>';
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
 }
 
-// 加载学生考核记录：获取并渲染学生任务记录、状态与操作按钮
+// ================= 加载学生考核记录 =================
 async function loadAuditRecords() {
     const tbody = document.getElementById('audit-records-body');
     try {
@@ -143,133 +154,101 @@ async function loadAuditRecords() {
         if (result.success && result.data.length > 0) {
             globalStudentRecordsCache = result.data;
             tbody.innerHTML = '';
-            
             result.data.forEach(record => {
                 const task = record.taskId; 
                 if(!task) return; 
 
-                let statusHtml = "";
-                let actionHtml = "";
-                
-                let earnText = `<span class="text-success fw-bold">${record.gainedTime}h</span> / <span class="text-warning fw-bold">${record.gainedBaseCoins + record.gainedBonusCoins}币</span>`;
-                if(record.deductedTime > 0) {
-                    earnText += `<br><small class="text-danger">已扣除 ${record.deductedTime}h (${record.deductReason})</small>`;
-                }
+                let statusHtml = "", actionHtml = "";
+                let earnText = `${record.gainedTime}H / <span class="text-danger">${record.gainedBaseCoins + record.gainedBonusCoins}C</span>`;
+                if(record.deductedTime > 0) earnText += `<br><small class="text-danger font-monospace">-${record.deductedTime}H (${record.deductReason})</small>`;
 
-                if (record.status === 'accepted') {
-                    statusHtml = `<span class="badge bg-secondary">任务进行中</span>`;
-                    actionHtml = `<span class="text-muted small">不可操作</span>`;
-                } else if (record.status === 'settling') {
-                    statusHtml = `<span class="badge bg-info text-dark">待交心得 (3天核减期)</span>`;
-                    actionHtml = `
-                        <button class="btn btn-sm btn-outline-danger me-1" onclick="deductTime('${record._id}')">扣除工时</button>
-                        <button class="btn btn-sm btn-outline-dark" onclick="markAnomaly('${record._id}')">标记异常</button>
-                    `;
-                } else if (record.status === 'pending_audit') {
-                    statusHtml = `<span class="badge bg-primary">心得已交 (待批阅)</span>`;
-                    actionHtml = `<button class="btn btn-sm btn-warning fw-bold text-dark" onclick="openReviewModal('${record._id}')">批阅发奖金</button>`;
-                } else if (record.status === 'settled') {
-                    statusHtml = `<span class="badge bg-success">彻底完结</span>`;
-                    actionHtml = `<span class="text-success small"><i class="bi bi-check-circle"></i> 已结算</span>`;
-                } else if (record.status === 'anomaly') {
-                    statusHtml = `<span class="badge bg-danger">异常纠纷中</span>`;
-                    actionHtml = `<span class="text-danger small">线下处理</span>`;
-                }
+                if (record.status === 'accepted') { statusHtml = `ACTIVE`; actionHtml = `LOCKED`; } 
+                else if (record.status === 'settling') {
+                    statusHtml = `REQ_LOGS`;
+                    actionHtml = `<button class="btn btn-sm btn-brut py-1 me-1" onclick="deductTime('${record._id}')">-HOURS</button><button class="btn btn-sm btn-brut py-1" onclick="markAnomaly('${record._id}')">FLAG</button>`;
+                } 
+                else if (record.status === 'pending_audit') {
+                    statusHtml = `AWAIT_REVIEW`;
+                    actionHtml = `<button class="btn btn-sm btn-brut btn-brut-red py-1" onclick="openReviewModal('${record._id}')">REVIEW</button>`;
+                } 
+                else if (record.status === 'settled') { statusHtml = `SETTLED`; actionHtml = `DONE`; } 
+                else if (record.status === 'anomaly') { statusHtml = `ANOMALY`; actionHtml = `FLAGGED`; }
 
-                const row = `
-                    <tr>
-                        <td class="fw-bold">${record.studentEmail.split('@')[0]}</td>
-                        <td class="text-muted small">${task.title}</td>
-                        <td>${earnText}</td>
-                        <td>${statusHtml}</td>
-                        <td class="text-end pe-4">${actionHtml}</td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+                tbody.innerHTML += `<tr>
+                    <td class="ps-4 font-monospace fw-bold">${record.studentEmail.split('@')[0]}</td>
+                    <td class="text-muted small text-uppercase">${task.title}</td>
+                    <td class="font-monospace fw-bold">${earnText}</td>
+                    <td class="font-monospace fw-bold">${statusHtml}</td>
+                    <td class="text-end pe-4 font-monospace">${actionHtml}</td>
+                </tr>`;
             });
-        } else {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">目前还没有学生接取您的任务，或任务尚未进入结算期。</td></tr>';
-        }
-    } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">加载失败，请检查网络。</td></tr>';
-    }
+        } else tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 font-monospace fw-bold text-muted">NO RECORDS FOUND.</td></tr>';
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
 }
 
-// 教师操作-扣除工时：调用接口核减学生工时、填写扣除理由
+// ================= 教师操作 =================
 window.deductTime = async function(recordId) {
-    const hours = parseFloat(prompt("你要扣除该学生几小时的工时？(请输入数字)"));
-    if (isNaN(hours) || hours <= 0) return;
-    
-    const reason = prompt("请输入扣除理由 (必填，如：迟到早退/摸鱼)：");
-    if (!reason) return alert("必须填写扣除理由！");
+    const { value: hours } = await Swal.fire({ ...brutSwalObj, title: 'DEDUCT HOURS', input: 'number', inputAttributes: { step: 0.5 }, showCancelButton: true });
+    if (!hours || hours <= 0) return;
+    const { value: reason } = await Swal.fire({ ...brutSwalObj, title: 'REASON', input: 'text', showCancelButton: true });
+    if (!reason) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/teacher/deduct-time`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ recordId, deductHours: hours, reason })
-        });
+        const response = await fetch(`${API_BASE_URL}/teacher/deduct-time`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, deductHours: hours, reason }) });
         const data = await response.json();
-        alert(data.success ? "✅ " + data.message : "⚠️ " + data.message);
-        if (data.success) loadAuditRecords(); 
-    } catch (error) { alert("无法连接到云服务器！"); }
+        if (data.success) { Toast.fire({ icon: 'success', title: 'DEDUCTED.' }); loadAuditRecords(); } 
+        else Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
 
-// 教师操作-批阅发奖：打开心得弹窗、提交奖金发放接口
 window.openReviewModal = function(recordId) {
     const record = globalStudentRecordsCache.find(r => r._id === recordId);
     if (!record) return;
-
     document.getElementById('modal-reflection-text').textContent = record.reflection;
     document.getElementById('modal-max-bonus').textContent = record.taskId.baseCoins;
     document.getElementById('modal-bonus-input').value = 0;
     document.getElementById('modal-current-record-id').value = recordId;
-
-    const myModal = new bootstrap.Modal(document.getElementById('reviewModal'));
-    myModal.show();
+    new bootstrap.Modal(document.getElementById('reviewModal')).show();
 };
 
 document.getElementById('btn-submit-review').addEventListener('click', async () => {
     const recordId = document.getElementById('modal-current-record-id').value;
     const bonusAmount = parseInt(document.getElementById('modal-bonus-input').value) || 0;
-
     try {
-        const response = await fetch(`${API_BASE_URL}/teacher/award-bonus`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ recordId, bonusAmount })
-        });
+        const response = await fetch(`${API_BASE_URL}/teacher/award-bonus`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, bonusAmount }) });
         const data = await response.json();
-        
         if (data.success) {
-            alert("🎉 " + data.message);
-            const myModalEl = document.getElementById('reviewModal');
-            const modal = bootstrap.Modal.getInstance(myModalEl);
-            modal.hide();
+            Toast.fire({ icon: 'success', title: 'AUTHORIZED.' });
+            bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
             loadAuditRecords();
-        } else {
-            alert("⚠️ 提交失败：" + data.message);
-        }
-    } catch (error) { alert("无法连接到云服务器！"); }
+        } else Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 });
 
-// 教师操作-标记异常：将学生任务记录标记为异常状态
 window.markAnomaly = async function(recordId) {
-    if(!confirm("确定要将该记录挂起为异常吗？这会停止一切自动结算，并将案件转入线下纠纷处理。")) return;
-    const reason = prompt("请输入标记异常的原因：") || "未填原因";
+    const res = await Swal.fire({ ...brutSwalObj, title: 'FLAG AS ANOMALY?', icon: 'warning', showCancelButton: true });
+    if(!res.isConfirmed) return;
+    const { value: reason } = await Swal.fire({ ...brutSwalObj, title: 'REASON', input: 'text', showCancelButton: true });
     try {
-        const response = await fetch(`${API_BASE_URL}/teacher/mark-anomaly`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ recordId, reason })
-        });
+        const response = await fetch(`${API_BASE_URL}/teacher/mark-anomaly`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, reason: reason||"N/A" }) });
         const data = await response.json();
-        alert(data.success ? "✅ " + data.message : "⚠️ " + data.message);
-        if (data.success) loadAuditRecords(); 
-    } catch (error) { alert("无法连接到云服务器！"); }
+        if (data.success) { Toast.fire({ icon: 'success', title: 'FLAGGED.' }); loadAuditRecords(); }
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
 
-// 退出登录功能：清空本地存储、跳转登录页
-document.getElementById('btn-logout').addEventListener('click', () => {
-    if(confirm("确定退出？")) { localStorage.clear(); window.location.href = 'login.html'; }
+// ================= 系统设置按钮交互 =================
+document.getElementById('btn-settings').addEventListener('click', () => {
+    Swal.fire({
+        ...brutSwalObj,
+        title: 'SYS.SETTINGS',
+        text: 'MODULE UNDER CONSTRUCTION (系统配置模块施工中，准备接入后续扩展功能)',
+        icon: 'info',
+        confirmButtonText: 'ACKNOWLEDGE'
+    });
 });
+
+document.getElementById('btn-logout').addEventListener('click', async () => {
+    const res = await Swal.fire({ ...brutSwalObj, title: 'TERMINATE SESSION?', icon: 'warning', showCancelButton: true });
+    if(res.isConfirmed) { localStorage.clear(); window.location.href = 'login.html'; }
+});
+

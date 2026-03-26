@@ -58,6 +58,17 @@ const TaskRecordSchema = new mongoose.Schema({
     completedAt: { type: Date }
 });
 const TaskRecord = mongoose.model('TaskRecord', TaskRecordSchema);
+// --- 新增：志愿补录数据模型 ---
+const RetroEntrySchema = new mongoose.Schema({
+    studentEmail: { type: String, required: true },
+    eventName: { type: String, required: true },
+    hours: { type: Number, required: true },
+    evidence: { type: String, required: true },
+    status: { type: String, default: 'pending_audit' }, // 状态: pending_audit, approved, rejected
+    createdAt: { type: Date, default: Date.now },
+    auditedAt: { type: Date }
+});
+const RetroEntry = mongoose.model('RetroEntry', RetroEntrySchema);
 
 // 3. 基础身份接口：服务状态检测、用户注册、登录验证
 app.get('/api/status', (req, res) => {
@@ -381,6 +392,99 @@ app.get('/api/teacher/student-records', async (req, res) => {
         res.json({ success: true, data: records });
     } catch (error) {
         res.status(500).json({ success: false, message: "拉取学生记录失败" });
+    }
+});
+
+// ================= 新增模块：志愿补录与全局数据管理 =================
+
+// 1. 学生提交志愿补录申请
+app.post('/api/student/retro-entry', async (req, res) => {
+    try {
+        const { studentEmail, eventName, hours, evidence } = req.body;
+        if (!studentEmail || !eventName || !hours || !evidence) {
+            return res.status(400).json({ success: false, message: "参数不完整" });
+        }
+        
+        const newEntry = new RetroEntry({ studentEmail, eventName, hours, evidence });
+        await newEntry.save();
+        res.json({ success: true, message: "补录申请已提交" });
+    } catch (error) {
+        console.error("提交补录报错:", error);
+        res.status(500).json({ success: false, message: "服务器内部错误" });
+    }
+});
+
+// 2. 管理员拉取待审核的补录列表
+app.get('/api/admin/retro-entries', async (req, res) => {
+    try {
+        const entries = await RetroEntry.find({ status: 'pending_audit' }).sort({ createdAt: 1 });
+        res.json({ success: true, data: entries });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "拉取补录列表失败" });
+    }
+});
+
+// 3. 管理员审批志愿补录
+app.post('/api/admin/audit-retro', async (req, res) => {
+    try {
+        const { entryId, action } = req.body;
+        const entry = await RetroEntry.findById(entryId);
+        if (!entry) return res.status(404).json({ success: false, message: "补录记录不存在" });
+
+        if (action === 'approve') {
+            entry.status = 'approved';
+            entry.auditedAt = new Date();
+            await entry.save();
+            
+            // 审批通过，自动给学生增加工时
+            await User.findOneAndUpdate(
+                { email: entry.studentEmail },
+                { $inc: { totalTime: entry.hours } }
+            );
+            res.json({ success: true, message: `已批准！${entry.hours} 小时已入账。` });
+        } else if (action === 'reject') {
+            entry.status = 'rejected';
+            entry.auditedAt = new Date();
+            await entry.save();
+            res.json({ success: true, message: "已驳回该补录申请。" });
+        } else {
+            res.status(400).json({ success: false, message: "未知操作" });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: "审核处理失败" });
+    }
+});
+
+// 4. 管理员拉取全校学生数据总览
+app.get('/api/admin/all-students', async (req, res) => {
+    try {
+        // 查找所有角色为 student 的用户
+        const students = await User.find({ role: 'student' });
+        
+        // 并行计算每个学生的信誉分和活跃任务数
+        const result = await Promise.all(students.map(async (student) => {
+            const activeCount = await TaskRecord.countDocuments({ 
+                studentEmail: student.email, 
+                status: { $in: ['accepted', 'settling', 'pending_audit'] } 
+            });
+            const settledCount = await TaskRecord.countDocuments({ studentEmail: student.email, status: 'settled' });
+            const anomalyCount = await TaskRecord.countDocuments({ studentEmail: student.email, status: 'anomaly' });
+            
+            let reputationScore = 100 + (settledCount * 2) - (anomalyCount * 10);
+            
+            return {
+                email: student.email,
+                totalTime: student.totalTime,
+                totalCoins: student.totalCoins,
+                reputationScore: reputationScore,
+                activeTasks: activeCount
+            };
+        }));
+        
+        res.json({ success: true, data: result });
+    } catch (error) {
+        console.error("拉取学生数据失败:", error);
+        res.status(500).json({ success: false, message: "拉取全校学生数据失败" });
     }
 });
 

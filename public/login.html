@@ -1,55 +1,51 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-bs-theme="light">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>时间银行 - 身份验证</title>
+    <title>TIMEBANK | AUTH_NODE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="l.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="l.css"> 
 </head>
-<body>
-    <i class="bi bi-moon-stars-fill theme-toggle" id="themeSwitcher" title="切换深浅色"></i>
+<body class="d-flex align-items-center justify-content-center" style="min-height: 100vh; position: relative;">
 
-    <div class="card login-card p-4 p-md-5 animate-up">
+    <button class="btn btn-brut position-absolute top-0 end-0 m-4 px-3" id="btn-theme-toggle" title="TOGGLE THEME" style="z-index: 1050;">
+        <i class="bi bi-moon-stars-fill"></i>
+    </button>
+
+    <div class="brut-card p-4 p-md-5" style="width: 100%; max-width: 480px; position: relative; z-index: 10;">
         
-        <div class="text-center mb-4 animate-up delay-1">
-            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 70px; height: 70px;">
-                <i class="bi bi-bank" style="font-size: 2.5rem;"></i>
-            </div>
-            <h3 class="fw-bold mb-1">时间银行</h3>
-            <p class="text-secondary small mb-0">让每一次志愿服务都有迹可循</p>
+        <div class="mb-4 border-bottom pb-3" style="border-bottom: 4px solid var(--brut-black) !important;">
+            <span class="badge-brut mb-2 d-inline-block">SYS.TIMEBANK</span>
+            <h2 class="fw-black m-0 font-monospace" style="letter-spacing: -1px;">AUTHENTICATION</h2>
+            <p class="font-monospace small fw-bold mt-2 mb-0" style="color: var(--brut-red);">// 让每一次志愿服务都有迹可循</p>
         </div>
 
-        <ul class="nav nav-pills nav-justified mb-4 animate-up delay-2" id="loginTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active rounded-pill fw-bold" id="tab-login" data-bs-toggle="pill" data-bs-target="#pills-login" type="button" role="tab">登录</button>
+        <ul class="nav nav-pills nav-justified mb-4" id="loginTabs" role="tablist">
+            <li class="nav-item pe-2" role="presentation">
+                <button class="nav-link active w-100" id="tab-login" data-bs-toggle="pill" data-bs-target="#pills-login" type="button" role="tab">LOGIN // 登录</button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-pill fw-bold" id="tab-register" data-bs-toggle="pill" data-bs-target="#pills-register" type="button" role="tab">注册</button>
+            <li class="nav-item ps-2" role="presentation">
+                <button class="nav-link w-100" id="tab-register" data-bs-toggle="pill" data-bs-target="#pills-register" type="button" role="tab">REGISTER // 注册</button>
             </li>
         </ul>
 
-        <div class="tab-content animate-up delay-3" id="pills-tabContent">
+        <div class="tab-content" id="pills-tabContent">
             
             <div class="tab-pane fade show active" id="pills-login" role="tabpanel">
                 <form id="login-form">
                     <div class="mb-3">
-                        <label class="form-label text-secondary small fw-bold">邮箱地址</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-envelope text-muted"></i></span>
-                            <input type="email" class="form-control border-start-0 ps-0 bg-transparent" id="login-email" placeholder="输入注册邮箱" required>
-                        </div>
+                        <label class="form-label font-monospace fw-bold small">USER_ID [邮箱地址]</label>
+                        <input type="email" class="form-control brut-input" id="login-email" placeholder="INPUT EMAIL..." required>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label text-secondary small fw-bold">登录密码</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-shield-lock text-muted"></i></span>
-                            <input type="password" class="form-control border-start-0 ps-0 bg-transparent" id="login-password" placeholder="输入密码" required>
-                        </div>
+                        <label class="form-label font-monospace fw-bold small">ACCESS_KEY [登录密码]</label>
+                        <input type="password" class="form-control brut-input" id="login-password" placeholder="INPUT PASSWORD..." required>
                     </div>
-                    <button type="button" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow-sm" id="btn-do-login">
-                        立即登录 <i class="bi bi-arrow-right-short fs-5 align-middle"></i>
+                    <button type="button" class="btn btn-brut btn-brut-red w-100 py-2 fs-5" id="btn-do-login">
+                        EXECUTE LOGIN <i class="bi bi-caret-right-fill"></i>
                     </button>
                 </form>
             </div>
@@ -57,32 +53,26 @@
             <div class="tab-pane fade" id="pills-register" role="tabpanel">
                 <form id="register-form">
                     <div class="mb-3">
-                        <label class="form-label text-secondary small fw-bold">邮箱地址</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-envelope text-muted"></i></span>
-                            <input type="email" class="form-control border-start-0 ps-0 bg-transparent" id="reg-email" placeholder="建议使用学校邮箱" required>
-                        </div>
+                        <label class="form-label font-monospace fw-bold small">NEW_USER_ID [邮箱地址]</label>
+                        <input type="email" class="form-control brut-input" id="reg-email" placeholder="SCHOOL EMAIL RECOMMENDED" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-secondary small fw-bold">设置密码</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-key text-muted"></i></span>
-                            <input type="password" class="form-control border-start-0 ps-0 bg-transparent" id="reg-password" placeholder="至少6位" required>
-                        </div>
+                        <label class="form-label font-monospace fw-bold small">SET_ACCESS_KEY [设置密码]</label>
+                        <input type="password" class="form-control brut-input" id="reg-password" placeholder="MIN 6 CHARS" required>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label text-secondary small fw-bold">选择身份</label>
-                        <select class="form-select bg-transparent" id="reg-role">
-                            <option value="student" selected>👨‍🎓 学生 (Student)</option>
-                            <option value="teacher">👨‍🏫 老师 (Teacher)</option>
-                            <option value="admin">🛡️ 审核员 (Admin)</option>
+                        <label class="form-label font-monospace fw-bold small">SYS_ROLE [选择身份]</label>
+                        <select class="form-select brut-input" id="reg-role">
+                            <option value="student" selected>STUDENT (学生)</option>
+                            <option value="teacher">TEACHER (老师)</option>
+                            <option value="admin">ADMIN (审核员)</option>
                         </select>
-                        <div class="form-text small text-danger mt-2">
-                            <i class="bi bi-info-circle"></i> V1 测试阶段开放全角色注册。
+                        <div class="font-monospace small fw-bold mt-2" style="color: var(--brut-red);">
+                            * V1 TEST: ALL ROLES OPEN
                         </div>
                     </div>
-                    <button type="button" class="btn btn-success btn-lg w-100 rounded-pill fw-bold shadow-sm" id="btn-do-register">
-                        创建账号 <i class="bi bi-check2-circle fs-5 align-middle"></i>
+                    <button type="button" class="btn btn-brut w-100 py-2 fs-5" id="btn-do-register" style="background-color: var(--brut-black); color: var(--brut-white);">
+                        CREATE NODE <i class="bi bi-plus-square-fill ms-2"></i>
                     </button>
                 </form>
             </div>
