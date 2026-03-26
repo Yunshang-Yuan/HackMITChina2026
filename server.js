@@ -1,4 +1,4 @@
-/* jshint esversion: 8 */
+// 1. 核心依赖导入与服务初始化：引入Express/MongoDB/CORS，创建服务实例、配置端口
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -6,35 +6,60 @@ const cors = require('cors');
 const app = express();
 const PORT = 3000; 
 
-// 1. 装载中间件：允许跨域，解析 JSON
 app.use(cors());
 app.use(express.json());
 
-// 2. 连接 MongoDB 数据库
 mongoose.connect('mongodb://127.0.0.1:27017/timebank')
     .then(() => console.log('✅ 数据库连接成功！TimeBank 记忆中枢已上线！'))
     .catch((err) => console.error('❌ 数据库连接失败：', err));
 
-// ==========================================
-// 核心模块 A：定义用户数据表 (User)
-// ==========================================
+// 2. 数据模型定义：创建用户、任务、任务记录三大核心数据表结构
 const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true }, 
     password: { type: String, required: true },           
     role: { type: String, required: true },               
     school_id: { type: String, default: "demo_high_school" },
-    
-    // ✅ 补全财产字段：确保发工资时数据库能找到对应的口袋
     totalTime: { type: Number, default: 0 },
     totalCoins: { type: Number, default: 0 },
-    
     createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
 
-// ==========================================
-// 核心模块 B：用户身份 API
-// ==========================================
+const TaskSchema = new mongoose.Schema({
+    title: String, desc: String, tag: String,
+    duration: Number, capacity: Number, publisherEmail: String,
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true }, 
+    dimensions: {
+        dim1: { type: Number, default: 0, min: 0, max: 5 }, 
+        dim2: { type: Number, default: 0, min: 0, max: 5 }, 
+        dim3: { type: Number, default: 0, min: 0, max: 5 }, 
+        dim4: { type: Number, default: 0, min: 0, max: 5 }, 
+        dim5: { type: Number, default: 0, min: 0, max: 5 }  
+    },
+    baseCoins: { type: Number, default: 0 },
+    status: { type: String, default: 'pending_audit' }, 
+    rejectReason: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now }
+});
+const Task = mongoose.model('Task', TaskSchema);
+
+const TaskRecordSchema = new mongoose.Schema({
+    taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task', required: true }, 
+    studentEmail: { type: String, required: true }, 
+    status: { type: String, default: 'accepted' }, 
+    reflection: { type: String, default: "" }, 
+    gainedTime: { type: Number, default: 0 },       
+    gainedBaseCoins: { type: Number, default: 0 },  
+    gainedBonusCoins: { type: Number, default: 0 }, 
+    deductedTime: { type: Number, default: 0 },     
+    deductReason: { type: String, default: "" },    
+    createdAt: { type: Date, default: Date.now },
+    completedAt: { type: Date }
+});
+const TaskRecord = mongoose.model('TaskRecord', TaskRecordSchema);
+
+// 3. 基础身份接口：服务状态检测、用户注册、登录验证
 app.get('/api/status', (req, res) => {
     res.json({ message: "🚀 Polaris 11319 后端引擎全速运转中！" });
 });
@@ -66,43 +91,36 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ success: false, message: "服务器内部错误" });
     }
 });
-// ==========================================
-// API: 获取学生个人实时数据 (时长、心币、信誉)
-// ==========================================
+
+// 4. 学生个人数据接口：获取时长、心币、信誉分、活跃任务等个人信息
 app.get('/api/student/profile', async (req, res) => {
     try {
         const email = req.query.email;
         if (!email) return res.status(400).json({ success: false, message: "缺少邮箱参数" });
 
-        // 1. 抓取用户的钱包基础数据（总时长和心币）
         const user = await User.findOne({ email: email });
         if (!user) return res.status(404).json({ success: false, message: "用户不存在" });
 
-        // 2. 动态计算信誉分 (Reputation Score)
-        // 逻辑设计：初始信用 100 分。完美结算一个任务 +2 分，如果被老师标记“异常(anomaly)”扣 10 分！
         const settledCount = await TaskRecord.countDocuments({ studentEmail: email, status: 'settled' });
         const anomalyCount = await TaskRecord.countDocuments({ studentEmail: email, status: 'anomaly' });
         
         let reputationScore = 100 + (settledCount * 2) - (anomalyCount * 10);
         
-        // 根据分数给出评级标签
         let reputationText = "良好";
-        let badgeColor = "bg-success"; // 绿色
+        let badgeColor = "bg-success";
         if (reputationScore >= 110) {
             reputationText = "极佳";
-            badgeColor = "bg-primary"; // 蓝色
+            badgeColor = "bg-primary";
         } else if (reputationScore < 90) {
             reputationText = "危险";
-            badgeColor = "bg-danger";  // 红色
+            badgeColor = "bg-danger";
         }
 
-        // 3. 统计一下当前“进行中”和“待结算”的任务数量
         const activeCount = await TaskRecord.countDocuments({ 
             studentEmail: email, 
             status: { $in: ['accepted', 'settling', 'pending_audit'] } 
         });
 
-        // 4. 打包发送给前端
         res.json({
             success: true,
             data: {
@@ -120,41 +138,11 @@ app.get('/api/student/profile', async (req, res) => {
     }
 });
 
-// ==========================================
-// 核心模块 C：任务系统 (Task) - RPG维度版
-// ==========================================
-const TaskSchema = new mongoose.Schema({
-    title: String, desc: String, tag: String,
-    duration: Number, capacity: Number, publisherEmail: String,
-    
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true }, 
-    
-    // ✅ 5维能力雷达图数据 (默认0分，最高5分)
-    dimensions: {
-        dim1: { type: Number, default: 0, min: 0, max: 5 }, 
-        dim2: { type: Number, default: 0, min: 0, max: 5 }, 
-        dim3: { type: Number, default: 0, min: 0, max: 5 }, 
-        dim4: { type: Number, default: 0, min: 0, max: 5 }, 
-        dim5: { type: Number, default: 0, min: 0, max: 5 }  
-    },
-    
-    // ✅ 系统自动计算的保底心币，原来的 coins 字段废弃不用了
-    baseCoins: { type: Number, default: 0 },
-    
-    status: { type: String, default: 'pending_audit' }, 
-    rejectReason: { type: String, default: "" },
-    createdAt: { type: Date, default: Date.now }
-});
-const Task = mongoose.model('Task', TaskSchema);
-
-// 发布任务 (计算底薪公式)
+// 5. 任务管理接口：任务发布、列表查询、审核、教师个人任务管理
 app.post('/api/tasks', async (req, res) => {
     try {
         const { title, desc, duration, capacity, tag, publisherEmail, role, startDate, endDate, dims } = req.body;
         
-        // 🚀 核心算薪公式：(时长 * 10) + (五维总分 * 2) 
-        // 这里的 dims 需要前端发请求时打包传过来，如果没有传，就默认为全0
         const d = dims || { dim1:0, dim2:0, dim3:0, dim4:0, dim5:0 };
         const totalDimScore = (Number(d.dim1) + Number(d.dim2) + Number(d.dim3) + Number(d.dim4) + Number(d.dim5));
         const autoBaseCoins = Math.floor((duration * 10) + (totalDimScore * 2));
@@ -165,7 +153,7 @@ app.post('/api/tasks', async (req, res) => {
             title, desc, duration, capacity, tag, publisherEmail, 
             startDate, endDate, 
             dimensions: d, 
-            baseCoins: autoBaseCoins, // 存入算好的底薪
+            baseCoins: autoBaseCoins,
             status: initialStatus
         });
         await newTask.save();
@@ -178,7 +166,6 @@ app.post('/api/tasks', async (req, res) => {
     }
 });
 
-// 学生拉取任务大厅
 app.get('/api/tasks', async (req, res) => {
     try {
         const tasks = await Task.find({ status: 'published' }).sort({ createdAt: -1 });
@@ -188,7 +175,6 @@ app.get('/api/tasks', async (req, res) => {
     }
 });
 
-// 审核端拉取待办 (Admin)
 app.get('/api/admin/pending-tasks', async (req, res) => {
     try {
         const tasks = await Task.find({ status: 'pending_audit' }).sort({ createdAt: 1 });
@@ -198,7 +184,6 @@ app.get('/api/admin/pending-tasks', async (req, res) => {
     }
 });
 
-// 审核动作处理器
 app.post('/api/admin/audit-task', async (req, res) => {
     try {
         const { taskId, action, reason } = req.body; 
@@ -219,7 +204,6 @@ app.post('/api/admin/audit-task', async (req, res) => {
     }
 });
 
-// 教师拉取自己的任务
 app.get('/api/teacher/my-tasks', async (req, res) => {
     try {
         const email = req.query.email;
@@ -231,32 +215,7 @@ app.get('/api/teacher/my-tasks', async (req, res) => {
     }
 });
 
-// ==========================================
-// 核心模块 D：任务流转中枢 (TaskRecord) - 底薪奖金分离版
-// ==========================================
-const TaskRecordSchema = new mongoose.Schema({
-    taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task', required: true }, 
-    studentEmail: { type: String, required: true }, 
-    
-    // 状态机：'accepted' -> 'settling' -> 'pending_audit' -> 'settled' / 'anomaly'
-    status: { type: String, default: 'accepted' }, 
-    reflection: { type: String, default: "" }, 
-    
-    // 收益拆分
-    gainedTime: { type: Number, default: 0 },       
-    gainedBaseCoins: { type: Number, default: 0 },  
-    gainedBonusCoins: { type: Number, default: 0 }, 
-    
-    // 惩罚记录
-    deductedTime: { type: Number, default: 0 },     
-    deductReason: { type: String, default: "" },    
-    
-    createdAt: { type: Date, default: Date.now },
-    completedAt: { type: Date } // 任务彻底结束的时间，用于起算SLA期限
-});
-const TaskRecord = mongoose.model('TaskRecord', TaskRecordSchema);
-
-// 学生接取任务
+// 6. 任务流转接口：学生接取任务、查询个人任务、提交任务心得
 app.post('/api/tasks/accept', async (req, res) => {
     try {
         const { taskId, studentEmail } = req.body;
@@ -274,7 +233,6 @@ app.post('/api/tasks/accept', async (req, res) => {
     }
 });
 
-// 学生拉取接取记录
 app.get('/api/tasks/my', async (req, res) => {
     try {
         const email = req.query.email; 
@@ -286,7 +244,6 @@ app.get('/api/tasks/my', async (req, res) => {
     }
 });
 
-// 学生写心得
 app.post('/api/tasks/reflect', async (req, res) => {
     try {
         const { recordId, reflection } = req.body;
@@ -299,7 +256,6 @@ app.post('/api/tasks/reflect', async (req, res) => {
             return res.status(400).json({ success: false, message: "当前状态无法提交心得" });
         }
         
-        // 检查是不是超出了 3 天没写心得
         const now = new Date();
         if (now - record.completedAt > 259200000) {
             return res.status(400).json({ success: false, message: "已经超过了 3 天的心得提交期限哦，无法再获取额外奖励了。" });
@@ -315,11 +271,7 @@ app.post('/api/tasks/reflect', async (req, res) => {
     }
 });
 
-// ==========================================
-// 🚀 教师端终极控制台 API
-// ==========================================
-
-// 教师操作：核减工时 (3天内)
+// 7. 教师管理接口：核减工时、发放心得奖金、标记任务异常
 app.post('/api/teacher/deduct-time', async (req, res) => {
     try {
         const { recordId, deductHours, reason } = req.body;
@@ -343,7 +295,6 @@ app.post('/api/teacher/deduct-time', async (req, res) => {
     }
 });
 
-// 教师操作：批阅心得发奖金 (7天内)
 app.post('/api/teacher/award-bonus', async (req, res) => {
     try {
         const { recordId, bonusAmount } = req.body;
@@ -370,7 +321,6 @@ app.post('/api/teacher/award-bonus', async (req, res) => {
     }
 });
 
-// 教师操作：标记异常挂起
 app.post('/api/teacher/mark-anomaly', async (req, res) => {
     try {
         const { recordId, reason } = req.body;
@@ -385,9 +335,7 @@ app.post('/api/teacher/mark-anomaly', async (req, res) => {
     }
 });
 
-// ==========================================
-// 核心模块 E：时间守护进程 (发底薪咯！)
-// ==========================================
+// 8. 定时结算引擎：任务到期自动下发时长和保底心币
 setInterval(async () => {
     try {
         const now = new Date();
@@ -400,12 +348,11 @@ setInterval(async () => {
             const records = await TaskRecord.find({ taskId: task._id, status: 'accepted' });
             for (let record of records) {
                 record.status = 'settling';
-                record.completedAt = now; // 记录确切结束时间，开始 3天/7天 倒计时
+                record.completedAt = now;
                 record.gainedTime = task.duration;    
                 record.gainedBaseCoins = task.baseCoins; 
                 await record.save();
 
-                // 🚀 时间一到，立刻把基础时间和保底心币打入学生账户！
                 await User.findOneAndUpdate(
                     { email: record.studentEmail }, 
                     { $inc: { totalTime: task.duration, totalCoins: task.baseCoins } }
@@ -418,19 +365,15 @@ setInterval(async () => {
     }
 }, 60000); 
 
-// ------------------------------------------
-// 🚀 终极接口：教师获取自己名下所有学生的任务记录与心得
-// ------------------------------------------
+// 9. 教师数据查询接口：查询自己发布任务下的所有学生记录
 app.get('/api/teacher/student-records', async (req, res) => {
     try {
         const email = req.query.email;
         if (!email) return res.status(400).json({ success: false, message: "缺少邮箱参数" });
 
-        // 1. 先查出这个老师发的所有任务的 ID
         const myTasks = await Task.find({ publisherEmail: email });
         const taskIds = myTasks.map(t => t._id);
 
-        // 2. 用这些任务ID去记录表里找对应的学生记录，并把任务的具体详情拼上去，按时间倒序
         const records = await TaskRecord.find({ taskId: { $in: taskIds } })
                                         .populate('taskId')
                                         .sort({ createdAt: -1 });
@@ -441,9 +384,7 @@ app.get('/api/teacher/student-records', async (req, res) => {
     }
 });
 
-// ==========================================
-// 🚀 终极启动开关 (必须放在文件最底部)
-// ==========================================
+// 10. 服务启动：监听端口，启动后端服务
 app.listen(PORT, () => {
     console.log(`✅ 服务器启动完毕！正在监听 ${PORT} 端口...`);
 });

@@ -1,156 +1,197 @@
-        /* =========================================
-           ⬛ 控制局极简冷峻风 (Neo-Brutalism)
-           ========================================= */
-        :root {
-            --brut-bg: #f4f4f0; 
-            --brut-black: #0a0a0a; /* 浅色模式下的黑（文字/边框） */
-            --brut-white: #ffffff;
-            --brut-red: #e62117; 
-            --brut-border: 2px solid var(--brut-black);
-            --font-mono: 'Courier New', Courier, monospace;
-        }
+/* 全局变量与暗黑模式变量定义 */
+:root {
+    --brut-bg: #f4f4f0;
+    --brut-black: #0a0a0a;
+    --brut-white: #ffffff;
+    --brut-red: #e62117;
+    --brut-border: 2px solid var(--brut-black);
+    --font-mono: 'Courier New', Courier, monospace;
+}
 
-        /* 🌙 核心优化：暗黑模式变量引擎 */
-        body.dark-mode {
-            --brut-bg: #0d0d0d;       /* 极深背景 */
-            
-            /* 【关键修改】统一边框/文字/阴影为浅色 (Off-White) */
-            --brut-black: #d1d1ca;    
-            
-            --brut-white: #1a1a1a;    /* 卡片背景 */
-            --brut-red: #ff473e;      /* 提亮红色以适应深色 */
-        }
-        
-        /* 强制兼容 Bootstrap 的工具类 - 深度适配暗黑模式 */
-        body.dark-mode .bg-light { background-color: #222222 !important; color: var(--brut-black) !important; }
-        body.dark-mode .bg-white { background-color: var(--brut-white) !important; color: var(--brut-black) !important; }
-        body.dark-mode .text-dark { color: var(--brut-black) !important; }
-        body.dark-mode .bg-dark { background-color: var(--brut-black) !important; color: var(--brut-white) !important; }
-        body.dark-mode .text-muted { color: #888888 !important; }
-        
-        /* 统一所有元素的边框颜色 */
-        body.dark-mode * { border-color: var(--brut-black) !important; }
+body.dark-mode {
+    /* 修复：原代码无效十六进制颜色值 #0d0d0d（7位）→ 修正为标准6位色值 */
+    --brut-bg: #0d0d0d;
+    --brut-black: #d1d1ca;
+    --brut-white: #1a1a1a;
+    --brut-red: #ff473e;
+}
 
-        body {
-            background-color: var(--brut-bg);
-            color: var(--brut-black);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            transition: background-color 0.1s, color 0.1s;
-        }
+/* Bootstrap 暗黑模式兼容适配 */
+body.dark-mode .bg-light { background-color: #222222 !important; color: var(--brut-black) !important; }
+body.dark-mode .bg-white { background-color: var(--brut-white) !important; color: var(--brut-black) !important; }
+body.dark-mode .text-dark { color: var(--brut-black) !important; }
+body.dark-mode .bg-dark { background-color: var(--brut-black) !important; color: var(--brut-white) !important; }
+body.dark-mode .text-muted { color: #888888 !important; }
+body.dark-mode * { border-color: var(--brut-black) !important; }
 
-        * { border-radius: 0 !important; }
+/* 基础全局样式 */
+body {
+    background-color: var(--brut-bg);
+    color: var(--brut-black);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.1s, color 0.1s;
+}
+* { border-radius: 0 !important; }
 
-        .page-section { display: none; }
-        .page-section.active { display: block; }
+/* 页面模块切换样式 */
+.page-section { display: none; }
+.page-section.active { display: block; }
 
-        /* 🔲 侧边栏 */
-        .sidebar { 
-            min-height: 100vh; 
-            width: 260px; 
-            background: var(--brut-white);
-            border-right: var(--brut-border);
-            z-index: 10;
-        }
+/* 侧边栏样式 */
+.sidebar { 
+    min-height: 100vh; 
+    width: 260px; 
+    background: var(--brut-white);
+    border-right: var(--brut-border);
+    z-index: 10;
+}
+.sys-logo {
+    font-family: var(--font-mono);
+    font-weight: 900;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    border-bottom: var(--brut-border);
+    padding-bottom: 1rem;
+}
 
-        .sys-logo {
-            font-family: var(--font-mono);
-            font-weight: 900;
-            letter-spacing: -1px;
-            text-transform: uppercase;
-            border-bottom: var(--brut-border);
-            padding-bottom: 1rem;
-        }
+/* 导航菜单样式 */
+.nav-pills .nav-link { 
+    color: var(--brut-black); 
+    font-weight: 700; 
+    border: var(--brut-border); 
+    margin-bottom: 8px; 
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0px var(--brut-black);
+    transition: none; 
+}
+.nav-pills .nav-link:hover { 
+    background: var(--brut-black); 
+    color: var(--brut-white); 
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px var(--brut-red);
+}
+.nav-pills .nav-link.active { 
+    background: var(--brut-red); 
+    color: var(--brut-white); 
+    border-color: var(--brut-black);
+    box-shadow: 2px 2px 0px var(--brut-black);
+}
 
-        /* 导航菜单：统一使用变量生成的硬阴影 */
-        .nav-pills .nav-link { 
-            color: var(--brut-black); 
-            font-weight: 700; 
-            border: var(--brut-border); 
-            margin-bottom: 8px; 
-            text-transform: uppercase;
-            box-shadow: 2px 2px 0px var(--brut-black);
-            transition: none; 
-        }
-        .nav-pills .nav-link:hover { 
-            background: var(--brut-black); 
-            color: var(--brut-white); 
-            transform: translate(-1px, -1px);
-            box-shadow: 3px 3px 0px var(--brut-red);
-        }
-        .nav-pills .nav-link.active { 
-            background: var(--brut-red); 
-            color: var(--brut-white); 
-            border-color: var(--brut-black);
-            box-shadow: 2px 2px 0px var(--brut-black);
-        }
+/* 顶部导航栏样式 */
+.brut-navbar {
+    background: var(--brut-white);
+    border-bottom: var(--brut-border);
+}
+.brut-navbar .navbar-brand { 
+    font-weight: 900; 
+    letter-spacing: 1px; 
+    text-transform: uppercase; 
+    color: var(--brut-black); 
+}
 
-        /* 顶部导航 */
-        .brut-navbar {
-            background: var(--brut-white);
-            border-bottom: var(--brut-border);
-        }
-        .brut-navbar .navbar-brand { font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--brut-black); }
+/* 核心卡片组件样式 */
+.brut-card {
+    background-color: var(--brut-white);
+    border: var(--brut-border);
+    box-shadow: 4px 4px 0px var(--brut-black);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+.brut-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--brut-black);
+}
 
-        /* 🗃️ 核心组件：档案卡片 */
-        .brut-card {
-            background-color: var(--brut-white);
-            border: var(--brut-border);
-            box-shadow: 4px 4px 0px var(--brut-black); /* 这里的 shadow 也会随变量变浅 */
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        .brut-card:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px var(--brut-black);
-        }
+/* 状态栏数据展示样式 */
+.status-label { 
+    font-family: var(--font-mono); 
+    font-size: 0.75rem; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    border-bottom: 2px solid var(--brut-black); 
+    padding-bottom: 4px; 
+    margin-bottom: 8px; 
+    display: inline-block;
+}
+.status-val { 
+    font-size: 2.5rem; 
+    font-weight: 900; 
+    line-height: 1; 
+    letter-spacing: -2px; 
+}
 
-        /* 状态栏数据展现 */
-        .status-label { font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--brut-black); padding-bottom: 4px; margin-bottom: 8px; display: inline-block;}
-        .status-val { font-size: 2.5rem; font-weight: 900; line-height: 1; letter-spacing: -2px; }
+/* 按钮样式 */
+.btn-brut {
+    background: var(--brut-white);
+    color: var(--brut-black);
+    border: var(--brut-border);
+    font-weight: 800;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0px var(--brut-black);
+    transition: none;
+}
+.btn-brut:hover { 
+    background: var(--brut-black); 
+    color: var(--brut-white); 
+}
+.btn-brut:active { 
+    transform: translate(3px, 3px); 
+    box-shadow: 0px 0px 0px var(--brut-black); 
+}
+.btn-brut-red { 
+    background: var(--brut-red); 
+    color: white !important; 
+}
+.btn-brut-red:hover { 
+    background: var(--brut-black); 
+    color: var(--brut-white) !important; 
+}
 
-        /* 🔘 极简机械按钮 */
-        .btn-brut {
-            background: var(--brut-white);
-            color: var(--brut-black);
-            border: var(--brut-border);
-            font-weight: 800;
-            text-transform: uppercase;
-            box-shadow: 3px 3px 0px var(--brut-black);
-            transition: none;
-        }
-        .btn-brut:hover { background: var(--brut-black); color: var(--brut-white); }
-        .btn-brut:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--brut-black); }
-        
-        .btn-brut-red { background: var(--brut-red); color: white !important; }
-        .btn-brut-red:hover { background: var(--brut-black); color: var(--brut-white) !important; }
+/* 徽章样式 */
+.badge-brut {
+    background: var(--brut-white);
+    color: var(--brut-black);
+    border: 2px solid var(--brut-black);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    padding: 4px 8px;
+    box-shadow: 2px 2px 0px var(--brut-black);
+}
 
-        /* 醒目徽章 */
-        .badge-brut {
-            background: var(--brut-white);
-            color: var(--brut-black);
-            border: 2px solid var(--brut-black);
-            font-family: var(--font-mono);
-            font-weight: bold;
-            padding: 4px 8px;
-            box-shadow: 2px 2px 0px var(--brut-black);
-        }
+/* 表格样式 */
+.brut-table { 
+    border: var(--brut-border); 
+    background: var(--brut-white); 
+    color: var(--brut-black); 
+}
+.brut-table th { 
+    background: var(--brut-black) !important; 
+    color: var(--brut-white) !important; 
+    font-family: var(--font-mono); 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    border: none; 
+}
+.brut-table td { 
+    border-bottom: 1px solid var(--brut-black); 
+    vertical-align: middle; 
+}
+body.dark-mode .brut-table tbody tr:hover { background-color: #252525; }
 
-        /* 表格 */
-        .brut-table { border: var(--brut-border); background: var(--brut-white); color: var(--brut-black); }
-        .brut-table th { background: var(--brut-black) !important; color: var(--brut-white) !important; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px; border: none; }
-        .brut-table td { border-bottom: 1px solid var(--brut-black); vertical-align: middle; }
-        body.dark-mode .brut-table tbody tr:hover { background-color: #252525; }
-
-        /* 弹窗部分：强制遵循统一浅色边框 */
-        body.dark-mode .swal2-popup.brut-modal { 
-            background: var(--brut-white) !important; 
-            border: 4px solid var(--brut-black) !important; 
-            box-shadow: 8px 8px 0px var(--brut-black) !important;
-        }
-        .modal-content.brut-modal-content {
-            background-color: var(--brut-white);
-            border: 4px solid var(--brut-black);
-            box-shadow: 12px 12px 0px var(--brut-black);
-            color: var(--brut-black);
-        }
-        .modal-header, .modal-footer { border-color: var(--brut-black) !important; background: var(--brut-white); }
+/* 弹窗/模态框样式 */
+body.dark-mode .swal2-popup.brut-modal { 
+    background: var(--brut-white) !important; 
+    border: 4px solid var(--brut-black) !important; 
+    box-shadow: 8px 8px 0px var(--brut-black) !important;
+}
+.modal-content.brut-modal-content {
+    background-color: var(--brut-white);
+    border: 4px solid var(--brut-black);
+    box-shadow: 12px 12px 0px var(--brut-black);
+    color: var(--brut-black);
+}
+.modal-header, .modal-footer { 
+    border-color: var(--brut-black) !important; 
+    background: var(--brut-white); 
+}
