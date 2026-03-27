@@ -48,7 +48,7 @@
         <div class="flex-grow-1" style="height: 100vh; overflow-y: auto;">
             
             <nav class="navbar navbar-expand-lg brut-navbar px-4 py-3">
-                <div class="container-fluid d-flex justify-content-between align-items-center">
+                <div class="container-fluid d-flex justify-content-between align-items-center px-0">
                     <span class="navbar-brand m-0" id="top-title">TERMINAL // 任务大厅</span>
                     
                     <div class="d-flex align-items-center gap-3">
@@ -66,7 +66,7 @@
             </nav>
 
             <div class="container-fluid p-4">
-                
+
                 <div id="section-hub" class="page-section active">
                     <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> AVAILABLE_TASKS</h5>
                     <div class="row g-4" id="task-list"></div>
@@ -77,12 +77,12 @@
                     <div class="table-responsive">
                         <table class="table brut-table align-middle mb-0">
                             <thead>
-                                <tr class="align-middle">
-                                    <th class="text-center py-3">TASK_NAME</th>
-                                    <th class="text-center py-3">EST_REWARD</th>
-                                    <th class="text-center py-3">TIMESTAMP</th>
-                                    <th class="text-center py-3">STATUS</th>
-                                    <th class="text-center py-3">ACTION</th>
+                                <tr class="align-middle text-center">
+                                    <th class="py-3">TASK_NAME</th>
+                                    <th>EST_REWARD</th>
+                                    <th>TIMESTAMP</th>
+                                    <th>STATUS</th>
+                                    <th>ACTION</th>
                                 </tr>
                             </thead>
                             <tbody id="my-records-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
@@ -91,32 +91,121 @@
                 </div>
 
                 <div id="section-retro" class="page-section">
-                    <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> RETROACTIVE_ENTRY</h5>
-                    <div class="brut-card p-4 mx-auto" style="max-width: 600px;">
-                        <form id="form-retro">
+                    <div class="d-flex justify-content-between align-items-end mb-4 border-bottom border-dark border-2 pb-2">
+                        <h4 class="fw-black font-monospace m-0"><i class="bi bi-calendar-plus-fill text-danger me-2"></i>RETROACTIVE_ENTRY_V2</h4>
+                        <span class="badge bg-dark text-white font-monospace">STATUS: DRAFT</span>
+                    </div>
+                    
+                    <div class="brut-card p-4 p-md-5 mx-auto" style="max-width: 800px;">
+                        <form id="form-retro-v2">
+                            
+                            <span class="badge-brut mb-3">1. STUDENT_INFO [基本信息]</span>
+                            <div class="row mb-4 bg-light p-3 border border-dark border-2 font-monospace small">
+                                <div class="col-md-4 mb-2"><strong class="text-muted">NAME:</strong> <span id="retro-name" class="fw-bold">AUTO_PULLING...</span></div>
+                                <div class="col-md-4 mb-2"><strong class="text-muted">STU_ID:</strong> <span id="retro-id" class="fw-bold">AUTO_PULLING...</span></div>
+                                <div class="col-md-4 mb-2"><strong class="text-muted">CLASS:</strong> <span id="retro-class" class="fw-bold">AUTO_PULLING...</span></div>
+                                <div class="col-md-6 mb-2 mb-md-0"><strong class="text-muted">EMAIL:</strong> <span id="retro-email" class="fw-bold">AUTO_PULLING...</span></div>
+                                <div class="col-md-6"><strong class="text-muted">PHONE:</strong> <span id="retro-phone" class="fw-bold">AUTO_PULLING...</span></div>
+                            </div>
+
+                            <span class="badge-brut mb-3">2. TIME_RECORD [服务时间]</span>
+                            <div class="row mb-4">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">DATE [服务日期] *</label>
+                                    <input type="date" class="form-control brut-input" id="retro-date" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">START_T [开始时间] *</label>
+                                    <input type="time" class="form-control brut-input calc-trigger" id="retro-start" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">END_T [结束时间] *</label>
+                                    <input type="time" class="form-control brut-input calc-trigger" id="retro-end" required>
+                                </div>
+                                
+                                <div class="col-12 p-3 bg-light border border-dark border-2 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="form-check form-switch d-flex align-items-center">
+                                            <input class="form-check-input border-dark" type="checkbox" id="retro-travel-toggle" style="width: 2.5em; height: 1.25em;">
+                                            <label class="form-check-label ms-2 font-monospace fw-bold small">INCLUDE_TRAVEL_TIME (包含路途时间)</label>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="font-monospace fw-bold small text-muted d-block">TOTAL_HOURS (自动计算)</span>
+                                        <h3 class="fw-black text-danger m-0" id="retro-total-hours">0.0<span class="fs-5">H</span></h3>
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-2 d-none" id="retro-travel-desc-box">
+                                    <input type="text" class="form-control brut-input" id="retro-travel-desc" placeholder="请说明路途时长及原因 (如: 往返地铁共1小时)...">
+                                </div>
+                            </div>
+
+                            <span class="badge-brut mb-3">3. ORG_&_SUPERVISOR [组织与主管]</span>
+                            <div class="row mb-4">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">ORG_NAME [组织名称] *</label>
+                                    <input type="text" class="form-control brut-input" id="retro-org-name" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">ORG_TYPE [组织类型] *</label>
+                                    <select class="form-select brut-input" id="retro-org-type">
+                                        <option value="NGO">NGO (非政府组织)</option>
+                                        <option value="Community">Community (社区服务)</option>
+                                        <option value="School">School (校内部门)</option>
+                                        <option value="Other">Other (其他)</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">ADDRESS [服务地点] *</label>
+                                    <input type="text" class="form-control brut-input" id="retro-org-address" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">SUP_NAME [主管姓名] *</label>
+                                    <input type="text" class="form-control brut-input" id="retro-sup-name" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">SUP_TITLE [主管职位] *</label>
+                                    <input type="text" class="form-control brut-input" id="retro-sup-title" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label font-monospace fw-bold small">SUP_EMAIL [主管邮箱] *</label>
+                                    <input type="email" class="form-control brut-input" id="retro-sup-email" placeholder="用于发送验证邮件" required>
+                                </div>
+                            </div>
+
+                            <span class="badge-brut mb-3">4. DETAILS_&_REFLECTION [详情与心得]</span>
                             <div class="mb-3">
-                                <label class="form-label font-monospace fw-bold small">EVENT_DESC [活动名称及描述]</label>
-                                <input type="text" class="form-control brut-input" id="retro-desc" placeholder="例如：2026极客黑客马拉松志愿者" required>
+                                <label class="form-label font-monospace fw-bold small">POSITION [服务性质/职位] *</label>
+                                <input type="text" class="form-control brut-input" id="retro-position" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label font-monospace fw-bold small">CLAIMED_HOURS [申请补录时长]</label>
-                                <input type="number" step="0.5" class="form-control brut-input" id="retro-hours" placeholder="例如：4.5" required>
+                                <label class="form-label font-monospace fw-bold small">DUTIES_DESC [职责详细描述] *</label>
+                                <textarea class="form-control brut-input" id="retro-duties" rows="2" required></textarea>
                             </div>
                             <div class="mb-4">
-                                <label class="form-label font-monospace fw-bold small">PROOF_LINK [证明材料链接/文字]</label>
-                                <textarea class="form-control brut-input" id="retro-proof" rows="3" placeholder="请贴上证明照片的云盘链接，或联系老师确认的人证说明" required></textarea>
+                                <label class="form-label font-monospace fw-bold small text-danger">REFLECTION [个人心得] * <i class="bi bi-info-circle" title="Admin将重点审核此项并计算心币"></i></label>
+                                <textarea class="form-control brut-input border-danger" id="retro-reflection" rows="4" placeholder="请详细描述你在本次志愿服务中的收获、遇到的挑战及如何解决... (Admin 考核重点)" required></textarea>
                             </div>
-                            <div class="p-3 mb-4 bg-light border border-dark border-2 font-monospace small">
-                                <i class="bi bi-info-circle-fill text-danger me-2"></i><strong>NOTICE:</strong> 提交后将由 ADMIN 进行人工审核，通过后工时将自动入账。
+
+                            <div class="p-3 mb-4 bg-dark text-white border border-dark border-2 font-monospace small">
+                                <div class="form-check">
+                                    <input class="form-check-input rounded-0" type="checkbox" id="retro-certify" required>
+                                    <label class="form-check-label" for="retro-certify">
+                                        <strong>CERTIFICATION STATEMENT:</strong> 我声明以上填写的信息全部真实准确。我已知晓系统将自动向上述填写的 [主管邮箱] 发送授权Token进行签名验证。伪造主管签名将导致严重的学术诚信惩罚。
+                                    </label>
+                                </div>
                             </div>
-                            <button type="button" class="btn btn-brut btn-brut-red w-100 py-2 fs-5" id="btn-submit-retro">SUBMIT_REQUEST <i class="bi bi-send-fill ms-2"></i></button>
+
+                            <button type="button" class="btn btn-brut btn-brut-red w-100 py-3 fs-5" id="btn-submit-retro-v2">
+                                SUBMIT_FOR_SUPERVISOR_VERIFICATION <i class="bi bi-envelope-paper-fill ms-2"></i>
+                            </button>
                         </form>
                     </div>
                 </div>
 
                 <div id="section-my-data" class="page-section">
                     <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> MY_DATA_DASHBOARD</h5>
-                    <div class="row">
+                    <div class="row mb-5">
                         <div class="col-md-3 mb-3">
                             <div class="brut-card h-100 p-3">
                                 <span class="status-label">SYS.TOTAL_HOURS</span>
@@ -159,7 +248,48 @@
 
     <div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content brut-modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title fw-black font-monospace m-0 text-uppercase">📁 TASK_DATA_EXTRACT</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-7 p-4 border-end" style="border-right: 4px solid var(--brut-black) !important; background: var(--brut-white);">
+                            <span class="badge-brut mb-3 d-inline-block" id="modal-task-tag">--</span>
+                            <h2 class="fw-black mb-4" id="modal-task-title" style="letter-spacing: -1px;">LOADING...</h2>
+                            <div class="bg-light border p-3 mb-4 font-monospace small" style="border-color: var(--brut-black) !important; box-shadow: inset 2px 2px 0px rgba(0,0,0,0.1);">
+                                <p class="mb-0" id="modal-task-desc" style="white-space: pre-wrap;">LOADING...</p>
+                            </div>
+                            
+                            <table class="table table-sm mb-0 font-monospace small" style="border-color: var(--brut-black);">
+                                <tbody>
+                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">PUB_ID</td><td class="fw-bold" id="modal-task-pub" style="border-color: var(--brut-black);">--</td></tr>
+                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">START_T</td><td class="fw-bold" id="modal-task-start" style="border-color: var(--brut-black);">--</td></tr>
+                                    <tr><td class="fw-bold bg-light w-25" style="border-color: var(--brut-black);">REQ_CAP</td><td class="fw-bold text-danger" style="border-color: var(--brut-black);"><span id="modal-task-cap">0</span> UNITS</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-5 p-4 d-flex flex-column justify-content-center align-items-center bg-light">
+                            <span class="status-label">CAPABILITY_RADAR</span>
+                            <div style="width: 100%; max-width: 220px;" class="mb-4">
+                                <canvas id="studentRadarChart"></canvas>
+                            </div>
+                            
+                            <div class="w-100 p-3 border text-center" style="background: var(--brut-white); border-color: var(--brut-black) !important;">
+                                <span class="d-block font-monospace small fw-bold mb-2">EXPECTED_YIELD</span>
+                                <h3 class="fw-black m-0"><span id="modal-task-time">0</span>H / <span id="modal-task-coins" class="text-danger">0</span><i class="bi bi-circle-square ms-1 fs-5 text-danger"></i></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer p-3">
+                    <button type="button" class="btn btn-brut px-4" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="button" class="btn btn-brut btn-brut-red px-5" id="btn-modal-accept">EXECUTE (接取)</button>
+                </div>
             </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -143,35 +143,106 @@ window.handleAudit = async function(taskId, action) {
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
 
-// ================= 2. 志愿补录审批 (新功能) =================
+// ================= 志愿补录审核与打分系统 =================
+
+// 加载全校的待审核补录记录
 async function loadRetroEntries() {
-    const tbody = document.getElementById('retro-table-body');
-    // 注意：这里需要你后端提供 /api/admin/retro-entries 接口
+    const tbody = document.getElementById('retro-list-body');
     try {
         const response = await fetch(`${API_BASE_URL}/admin/retro-entries`);
         const result = await response.json();
+        
         if (result.success && result.data.length > 0) {
-            document.getElementById('retro-count').textContent = result.data.length;
-            tbody.innerHTML = ''; 
+            tbody.innerHTML = '';
             result.data.forEach(entry => {
                 const date = new Date(entry.createdAt).toLocaleDateString();
-                tbody.innerHTML += `<tr>
-                    <td class="ps-4 fw-bold font-monospace">${entry.studentEmail.split('@')[0]}</td>
-                    <td class="fw-bold text-uppercase">${entry.eventName}</td>
-                    <td class="font-monospace fw-bold text-danger">${entry.hours}H</td>
-                    <td><button class="btn btn-sm btn-brut py-1" onclick="viewEvidence('${entry.evidence}')">VIEW_PROOF</button></td>
-                    <td class="font-monospace small">${date}</td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-sm btn-brut py-1 me-1" onclick="handleRetroAudit('${entry._id}', 'reject')">REJECT</button>
-                        <button class="btn btn-sm btn-brut btn-brut-red py-1" onclick="handleRetroAudit('${entry._id}', 'approve')">APPROVE</button>
-                    </td>
-                </tr>`;
+                // 把心得里的单引号转义，防止破坏 HTML
+                const safeReflection = (entry.reflection || "旧版数据无心得").replace(/'/g, "\\'"); 
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-center fw-bold">${entry.studentEmail.split('@')[0]}</td>
+                        <td class="text-center text-uppercase">${entry.eventName}</td>
+                        <td class="text-center fw-black">${entry.hours}H</td>
+                        <td class="text-center"><a href="#" class="text-primary text-decoration-none fw-bold" onclick="alert('证据链接: ${entry.evidence}')">VIEW_PROOF</a></td>
+                        <td class="text-center">${date}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-brut btn-brut-red py-1 px-3" onclick="openAuditModal('${entry._id}', ${entry.hours}, '${safeReflection}')">REVIEW (审阅)</button>
+                        </td>
+                    </tr>
+                `;
             });
         } else {
-            document.getElementById('retro-count').textContent = "0";
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 font-monospace fw-bold text-muted">NO PENDING RETRO ENTRIES.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 font-monospace fw-bold text-muted">NO PENDING REQUESTS (暂无待审核补录)</td></tr>';
         }
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger fw-bold font-monospace">FETCH FAILED (WAITING FOR API).</td></tr>'; }
+    } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger fw-black font-monospace">FETCH_FAILED</td></tr>';
+    }
+}
+
+// 打开带有心得和打分功能的酷炫弹窗
+window.openAuditModal = async function(entryId, hours, reflectionText) {
+    const { value: formValues, isConfirmed, isDenied } = await Swal.fire({
+        ...brutSwalObj,
+        title: 'SYS.AUDIT_REFLECTION',
+        html: `
+            <div class="text-start mb-4">
+                <span class="badge-brut mb-2">STUDENT_REFLECTION [心得内容]</span>
+                <div class="p-3 bg-light border border-dark border-2 small font-monospace" style="max-height: 200px; overflow-y: auto; text-align: justify; white-space: pre-wrap;">${reflectionText}</div>
+            </div>
+            
+            <div class="text-start p-3 bg-dark text-white border border-dark border-2">
+                <label class="form-label font-monospace fw-bold small text-danger mb-2">SCORE (0-20) [心得打分] *</label>
+                <input type="number" id="swal-retro-score" class="form-control rounded-0 border-danger fw-bold fs-5" min="0" max="20" value="15">
+                <div class="mt-3 font-monospace small">
+                    <i class="bi bi-calculator-fill text-danger me-1"></i> CALC: (${hours}H × 10) + (SCORE × 3)
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'APPROVE <i class="bi bi-check-lg"></i>',
+        denyButtonText: 'REJECT <i class="bi bi-x-lg"></i>',
+        cancelButtonText: 'CANCEL',
+        confirmButtonColor: '#e62117',
+        denyButtonColor: '#0a0a0a',
+        preConfirm: () => {
+            const score = document.getElementById('swal-retro-score').value;
+            if (score < 0 || score > 20) {
+                Swal.showValidationMessage('分数必须在 0 到 20 之间！');
+            }
+            return { action: 'approve', score: score };
+        }
+    });
+
+    if (isConfirmed) {
+        // 执行批准和发钱
+        executeRetroAudit(entryId, 'approve', formValues.score);
+    } else if (isDenied) {
+        // 执行驳回
+        executeRetroAudit(entryId, 'reject', 0);
+    }
+};
+
+// 提交审核结果到后端
+async function executeRetroAudit(entryId, action, adminScore) {
+    Swal.fire({ ...brutSwalObj, title: 'PROCESSING...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/audit-retro`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ entryId, action, adminScore })
+        });
+        const data = await response.json();
+        if (data.success) {
+            Swal.fire({ ...brutSwalObj, title: 'EXECUTED', text: data.message, icon: 'success' });
+            loadRetroEntries(); // 刷新列表
+        } else {
+            Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
+        }
+    } catch (error) {
+        Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'NETWORK CONNECTION LOST.', icon: 'error' });
+    }
 }
 
 window.viewEvidence = function(evidenceStr) {

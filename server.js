@@ -58,13 +58,15 @@ const TaskRecordSchema = new mongoose.Schema({
     completedAt: { type: Date }
 });
 const TaskRecord = mongoose.model('TaskRecord', TaskRecordSchema);
-// --- 新增：志愿补录数据模型 ---
+// --- 升级版：志愿补录数据模型 ---
 const RetroEntrySchema = new mongoose.Schema({
     studentEmail: { type: String, required: true },
     eventName: { type: String, required: true },
     hours: { type: Number, required: true },
     evidence: { type: String, required: true },
-    status: { type: String, default: 'pending_audit' }, // 状态: pending_audit, approved, rejected
+    reflection: { type: String, default: "无心得记录" }, // 新增：保存学生提交的心得
+    earnedCoins: { type: Number, default: 0 },         // 新增：记录这笔补录最终发了多少心币
+    status: { type: String, default: 'pending_audit' }, 
     createdAt: { type: Date, default: Date.now },
     auditedAt: { type: Date }
 });
@@ -424,24 +426,30 @@ app.get('/api/admin/retro-entries', async (req, res) => {
     }
 });
 
-// 3. 管理员审批志愿补录
+// 3. 管理员审批志愿补录 (带心得打分算薪引擎)
 app.post('/api/admin/audit-retro', async (req, res) => {
     try {
-        const { entryId, action } = req.body;
+        const { entryId, action, adminScore } = req.body;
         const entry = await RetroEntry.findById(entryId);
         if (!entry) return res.status(404).json({ success: false, message: "补录记录不存在" });
 
         if (action === 'approve') {
+            // 核心计薪引擎： (工时 × 10) + (打分 × 3)
+            const score = Number(adminScore) || 0;
+            const calculatedCoins = Math.floor((entry.hours * 10) + (score * 3));
+
             entry.status = 'approved';
             entry.auditedAt = new Date();
+            entry.earnedCoins = calculatedCoins; // 记录发的钱
             await entry.save();
             
-            // 审批通过，自动给学生增加工时
+            // 同时给学生增加：工时 + 算出来的心币
             await User.findOneAndUpdate(
                 { email: entry.studentEmail },
-                { $inc: { totalTime: entry.hours } }
+                { $inc: { totalTime: entry.hours, totalCoins: calculatedCoins } }
             );
-            res.json({ success: true, message: `已批准！${entry.hours} 小时已入账。` });
+            res.json({ success: true, message: `审批通过！已下发 ${entry.hours}H 工时与 ${calculatedCoins} 枚心币。` });
+            
         } else if (action === 'reject') {
             entry.status = 'rejected';
             entry.auditedAt = new Date();

@@ -63,7 +63,6 @@ if (!userEmail || userRole !== 'student') {
 }
 
 // 加载学生个人数据统计
-// 替换原有的 loadUserProfile 函数
 async function loadUserProfile() {
     try {
         const response = await fetch(`${API_BASE_URL}/student/profile?email=${encodeURIComponent(userEmail)}`);
@@ -74,8 +73,14 @@ async function loadUserProfile() {
             document.getElementById('stat-coins').textContent = result.data.totalCoins;
             document.getElementById('stat-rep-score').textContent = result.data.reputationScore;
             document.getElementById('stat-active').textContent = result.data.activeTasks;
-            document.getElementById('stat-rep-badge').textContent = result.data.reputationText;
-            if(result.data.reputationScore < 80) document.getElementById('stat-rep-badge').classList.add('bg-danger', 'text-white');
+            
+            // 处理信誉度徽章颜色
+            const badge = document.getElementById('stat-rep-badge');
+            badge.textContent = result.data.reputationText;
+            badge.className = 'badge font-monospace fw-bold px-2 py-1 border border-dark'; // 重置样式
+            if (result.data.reputationScore < 90) badge.classList.add('bg-danger', 'text-white');
+            else if (result.data.reputationScore >= 110) badge.classList.add('bg-primary', 'text-white');
+            else badge.classList.add('bg-light', 'text-dark');
             
             // 同步更新右上角导航栏的精简数据
             document.getElementById('nav-time').textContent = result.data.totalTime;
@@ -86,8 +91,7 @@ async function loadUserProfile() {
     } catch (error) { console.error("FETCH ERROR:", error); }
 }
 
-// 顶部导航切换逻辑
-// 替换掉原有的 document.getElementById('nav-hub').addEventListener... 这一坨代码
+// 顶部导航切换逻辑 (已移除冲突的旧代码)
 const studentNavIds = ['nav-hub', 'nav-my-tasks', 'nav-retro', 'nav-my-data'];
 const studentSecIds = ['section-hub', 'section-my-tasks', 'section-retro', 'section-my-data'];
 const studentTitles = ["TERMINAL // 任务大厅", "TERMINAL // 个人进程", "TERMINAL // 志愿补录", "TERMINAL // 我的数据"];
@@ -111,16 +115,6 @@ document.getElementById('nav-hub').addEventListener('click', (e) => { e.preventD
 document.getElementById('nav-my-tasks').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(1); loadMyRecords(); });
 document.getElementById('nav-retro').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(2); });
 document.getElementById('nav-my-data').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(3); loadUserProfile(); });
-
-document.getElementById('nav-my-tasks').addEventListener('click', (e) => {
-    e.preventDefault();
-    document.getElementById('nav-my-tasks').classList.add('active');
-    document.getElementById('nav-hub').classList.remove('active');
-    document.getElementById('section-my-tasks').classList.add('active');
-    document.getElementById('section-hub').classList.remove('active');
-    document.getElementById('top-title').textContent = "TERMINAL // 个人进程";
-    loadMyRecords();
-});
 
 // 加载任务大厅公共任务
 async function loadTasks() {
@@ -237,7 +231,6 @@ async function loadMyRecords() {
                 const date = new Date(record.createdAt).toLocaleDateString().replace(/\//g,'-');
                 let statusHtml = "", actionHtml = "";
 
-                // 注意这里统一加上了 status-badge 类
                 if (record.status === 'settled') {
                     statusHtml = `<span class="badge status-badge bg-dark rounded-0 border border-dark" style="color: var(--brut-white);">COMPLETED</span>`;
                     actionHtml = `<span class="fw-black">+${record.gainedTime}H / +${record.gainedBaseCoins + record.gainedBonusCoins}C</span>`;
@@ -255,7 +248,6 @@ async function loadMyRecords() {
                     actionHtml = `<span class="text-muted">IN PROGRESS</span>`;
                 }
                 
-                // 将所有 td 设为 text-center 居中对齐
                 tbody.innerHTML += `
                     <tr>
                         <td class="text-center fw-bold text-uppercase">${task.title}</td>
@@ -287,43 +279,111 @@ window.submitReflection = async function(recordId) {
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION FAILED.', icon: 'error' }); }
 };
 
-// 提交志愿补录表单逻辑
-document.getElementById('btn-submit-retro').addEventListener('click', async () => {
-    const eventName = document.getElementById('retro-desc').value;
-    const hours = document.getElementById('retro-hours').value;
-    const evidence = document.getElementById('retro-proof').value;
+// ================= 志愿补录 V2 核心逻辑 =================
 
-    if (!eventName || !hours || !evidence) {
-        Swal.fire({ ...brutSwalObj, title: 'DATA_ERR', text: '请完整填写活动名称、时长及证明材料。', icon: 'warning' });
-        return;
+// 1. 模拟拉取登录学生的个人信息 (后续对接真实的 User Profile 接口)
+function populateRetroProfile() {
+    // 这里先用 localStorage 里的邮箱做示范，真正落地时从 profile 接口获取
+    document.getElementById('retro-email').textContent = userEmail;
+    document.getElementById('retro-name').textContent = "PULL_WAITING";
+    document.getElementById('retro-id').textContent = "PULL_WAITING";
+    // ... 其他信息预留
+}
+
+// 2. 自动计算服务时长
+function calculateRetroHours() {
+    const startStr = document.getElementById('retro-start').value;
+    const endStr = document.getElementById('retro-end').value;
+    const hourDisplay = document.getElementById('retro-total-hours');
+
+    if (startStr && endStr) {
+        const start = new Date(`1970-01-01T${startStr}Z`);
+        const end = new Date(`1970-01-01T${endStr}Z`);
+        let diffMs = end - start;
+        
+        // 如果结束时间小于开始时间（跨天的情况，虽然很少见，但防呆）
+        if (diffMs < 0) { diffMs += 24 * 60 * 60 * 1000; }
+        
+        const diffHrs = (diffMs / (1000 * 60 * 60)).toFixed(1);
+        hourDisplay.innerHTML = `${diffHrs}<span class="fs-5">H</span>`;
+        hourDisplay.setAttribute('data-hours', diffHrs);
+    } else {
+        hourDisplay.innerHTML = `0.0<span class="fs-5">H</span>`;
+        hourDisplay.setAttribute('data-hours', 0);
     }
+}
 
-    // 假设你的后端补录接口是 /api/student/retro-entry
-    try {
-        Swal.fire({ ...brutSwalObj, title: 'UPLOADING...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-        
-        const response = await fetch(`${API_BASE_URL}/student/retro-entry`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                studentEmail: userEmail,
-                eventName: eventName,
-                hours: parseFloat(hours),
-                evidence: evidence
-            })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            Swal.fire({ ...brutSwalObj, title: 'SUBMITTED', text: '补录申请已提交，请等待管理员审核。', icon: 'success' });
-            document.getElementById('form-retro').reset();
-        } else {
-            Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
-        }
-    } catch (error) {
-        Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: '等待后端接口部署', icon: 'info' });
+// 绑定时间输入框的监听事件
+document.querySelectorAll('.calc-trigger').forEach(input => {
+    input.addEventListener('change', calculateRetroHours);
+});
+
+// 3. 路途时间开关逻辑
+document.getElementById('retro-travel-toggle').addEventListener('change', function() {
+    const descBox = document.getElementById('retro-travel-desc-box');
+    if (this.checked) {
+        descBox.classList.remove('d-none');
+        document.getElementById('retro-travel-desc').setAttribute('required', 'true');
+    } else {
+        descBox.classList.add('d-none');
+        document.getElementById('retro-travel-desc').removeAttribute('required');
+        document.getElementById('retro-travel-desc').value = '';
     }
 });
+
+// 4. 提交表单 (预留API对接)
+document.getElementById('btn-submit-retro-v2').addEventListener('click', async () => {
+    // 检查必填项和声明勾选
+    const certify = document.getElementById('retro-certify').checked;
+    const supEmail = document.getElementById('retro-sup-email').value;
+    const reflection = document.getElementById('retro-reflection').value;
+    const totalHours = parseFloat(document.getElementById('retro-total-hours').getAttribute('data-hours')) || 0;
+
+    if (!certify) return Swal.fire({ ...brutSwalObj, title: 'DECLARATION_REQ', text: '请先勾选底部的真实性声明！', icon: 'warning' });
+    if (totalHours <= 0) return Swal.fire({ ...brutSwalObj, title: 'TIME_ERR', text: '服务时长必须大于 0！', icon: 'error' });
+    if (!supEmail || !reflection) return Swal.fire({ ...brutSwalObj, title: 'DATA_MISSING', text: '主管邮箱与个人心得为必填项！', icon: 'error' });
+
+    // 构建发给后端的 Payload (准备对接)
+    const payload = {
+        studentEmail: userEmail,
+        date: document.getElementById('retro-date').value,
+        startTime: document.getElementById('retro-start').value,
+        endTime: document.getElementById('retro-end').value,
+        totalHours: totalHours,
+        travelIncluded: document.getElementById('retro-travel-toggle').checked,
+        travelDesc: document.getElementById('retro-travel-desc').value,
+        orgName: document.getElementById('retro-org-name').value,
+        orgType: document.getElementById('retro-org-type').value,
+        orgAddress: document.getElementById('retro-org-address').value,
+        supName: document.getElementById('retro-sup-name').value,
+        supTitle: document.getElementById('retro-sup-title').value,
+        supEmail: supEmail,
+        position: document.getElementById('retro-position').value,
+        duties: document.getElementById('retro-duties').value,
+        reflection: reflection,
+        status: 'pending_supervisor' // 提交后进入等待主管验证阶段
+    };
+
+    // 模拟发送请求流程 (真实接口写好后替换此处的 fetch)
+    Swal.fire({
+        ...brutSwalObj,
+        title: 'SENDING_VERIFICATION...',
+        text: `系统正在向 ${supEmail} 发送授权签名邮件，请提醒主管查收。`,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'MOCK_SUBMIT (模拟提交)'
+    }).then((result) => {
+        if(result.isConfirmed) {
+            Swal.fire({ ...brutSwalObj, title: 'SUBMITTED', text: '补录表单已挂起！等待主管验签后进入 Admin 最终审核流。', icon: 'success' });
+            document.getElementById('form-retro-v2').reset();
+            document.getElementById('retro-total-hours').innerHTML = `0.0<span class="fs-5">H</span>`;
+            document.getElementById('retro-travel-desc-box').classList.add('d-none');
+        }
+    });
+});
+
+// 在初始化时调用拉取个人信息
+populateRetroProfile();
 
 // 退出登录功能
 document.getElementById('btn-logout').addEventListener('click', async () => {
