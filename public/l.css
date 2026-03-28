@@ -135,3 +135,49 @@ body.dark-mode .swal2-popup.brut-modal {
     box-shadow: 8px 8px 0px var(--brut-black) !important;
     color: var(--brut-black);
 }
+
+/* ================= l.css 新增：表单细节与骇客彩蛋适配 ================= */
+
+/* 小眼睛图标悬浮效果 */
+.pwd-toggle:hover {
+    transform: scale(1.1);
+    color: var(--brut-red) !important;
+}
+
+/* 魂斗罗彩蛋：页面级别的强力变异 */
+body.hacker-mode {
+    background-color: #050505 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    color: #00ff00 !important;
+}
+
+body.hacker-mode .brut-card {
+    background-color: #0a0a0a !important;
+    border-color: #00ff00 !important;
+    box-shadow: 8px 8px 0px rgba(0, 255, 0, 0.4) !important;
+    color: #00ff00 !important;
+}
+
+body.hacker-mode .brut-input {
+    background-color: #000000 !important;
+    border-color: #00ff00 !important;
+    color: #00ff00 !important;
+    box-shadow: 4px 4px 0px rgba(0, 255, 0, 0.2) !important;
+}
+
+body.hacker-mode .btn-brut {
+    background-color: #000000 !important;
+    border-color: #00ff00 !important;
+    color: #00ff00 !important;
+}
+
+body.hacker-mode .btn-brut:hover {
+    background-color: #00ff00 !important;
+    color: #000000 !important;
+}
+
+/* 强制让验证码的获取按钮和密码框右侧图标对齐 */
+.position-relative i.bi {
+    font-size: 1.2rem;
+    z-index: 5;
+}
