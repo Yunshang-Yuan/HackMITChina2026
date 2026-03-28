@@ -73,7 +73,6 @@ document.getElementById('btn-settings').addEventListener('click', () => {
 if (!userEmail || userRole !== 'student') {
     Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '未授权的访问请求。' }).then(() => { window.location.href = "login.html"; });
 } else {
-    document.getElementById('user-email-display').textContent = userEmail.split('@')[0];
     loadUserProfile();
     loadTasks();
 }

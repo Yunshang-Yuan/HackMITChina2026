@@ -28,9 +28,7 @@ const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: 
 
 if (!userEmail || userRole !== 'teacher') {
     Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '无教师权限。' }).then(() => { window.location.href = "login.html"; });
-} else {
-    document.getElementById('user-email-display').textContent = userEmail.split('@')[0];
-}
+} 
 
 // ================= 暗黑模式切换 =================
 const themeBtn = document.getElementById('btn-theme-toggle');

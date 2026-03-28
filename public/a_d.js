@@ -29,7 +29,6 @@ const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: 
 if (!userEmail || userRole !== 'admin') {
     Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '无管理员权限。' }).then(() => { window.location.href = "login.html"; });
 } else {
-    document.getElementById('user-email-display').textContent = userEmail.split('@')[0];
     loadPendingTasks();
 }
 
