@@ -450,17 +450,53 @@ async function runTutorialDemo() {
     await moveCursorTo('#task-desc');
     await typeIn('#task-desc', '帮忙发传单，给新生带路，很简单的。', 80);
 
-    // 4. 召唤 AI 扩写
+    // 4. 召唤 AI 扩写 (💯 零成本防翻车演示版)
     const aiBtnSelector = '#btn-ai-refine';
     await moveCursorTo(aiBtnSelector);
     const aiBtn = document.querySelector(aiBtnSelector);
+    
+    // 幽灵点击特效
     aiBtn.classList.add('tut-click-blink');
     await wait(400);
-    aiBtn.click(); // 触发后端 DeepSeek 接口
     aiBtn.classList.remove('tut-click-blink');
 
-    // 悬停等待 AI 思考（此时屏幕中心应该是展开的文本框）
-    await wait(4500); 
+    // 🚨 核心魔法：不调用 .click() 触发真实网络请求，而是我们自己接管 UI！
+    const originalBtnHtml = aiBtn.innerHTML;
+    aiBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 润色中...';
+    aiBtn.disabled = true;
+
+    // 悬停等待 AI 思考（假装在请求，其实是在省钱，时间缩短到 2.5 秒保证节奏紧凑）
+    await wait(2500); 
+
+    // 准备一段极其华丽、排版完美的“假” AI 扩写结果
+    const mockAIResponse = `### 🌟 校园开放日：新生引导志愿服务
+
+**任务目标**：
+协助学校顺利开展2026年度校园开放日，为新生及家长提供热情、准确的游览指引，展现 Polaris 11319 团队及我校学子的良好风采。
+
+**具体工作**：
+1. **物资分发**：在校门迎宾处发放校园地图与活动宣传册。
+2. **路线指引**：驻守关键路口（如图书馆、体育馆），解答家长路线咨询。
+3. **机动协助**：协助主会场工作人员疏导人流，确保活动安全有序。
+
+**注意事项**：
+- 请着标准志愿者服装，保持微笑，展现积极风貌。
+- 请提前15分钟到达指定点位进行签到与培训。`;
+
+    // 像魔法一样瞬间填入文本框
+    const descInput = document.querySelector('#task-desc');
+    descInput.value = mockAIResponse;
+    // 派发 input 事件，确保如果有其他监听器能捕获到变化
+    descInput.dispatchEvent(new Event('input', { bubbles: true }));
+    
+    // 恢复按钮状态，并假装弹出一个成功的 Toast
+    aiBtn.innerHTML = originalBtnHtml;
+    aiBtn.disabled = false;
+    if (typeof Toast !== 'undefined') {
+        Toast.fire({ icon: 'success', title: '描述已扩写！' });
+    }
+    
+    await wait(1000); // 停顿一秒，让评审看清扩写后的震撼效果
 
     // 5. 填写时间和时长 (此时页面会自动往下滑！)
     document.querySelector('#task-start').value = "2026-05-01T08:00";
