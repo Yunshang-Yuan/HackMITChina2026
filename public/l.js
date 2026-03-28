@@ -263,10 +263,15 @@ document.getElementById('btn-do-login').addEventListener('click', async (e) => {
             storage.setItem('userEmail', email);
             storage.setItem('userRole', data.role);
             
+            // 👇 新增：把真实姓名和学号存进本地，供各端读取
+            storage.setItem('realName', data.realName || '未知用户');
+            storage.setItem('studentId', data.studentId || 'SYS-000');
+            storage.setItem('studentClass', data.studentClass || 'N/A');
+            
             if(!rememberMe) localStorage.removeItem('userEmail'); 
 
             window.location.href = `${data.role}_dashboard.html`;
-        } else {
+        }else {
             Swal.fire({ ...brutSwalObj, title: 'AUTH_FAILED', text: data.message, icon: 'error' });
         }
     } catch (error) {

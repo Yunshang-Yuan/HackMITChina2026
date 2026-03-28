@@ -113,30 +113,39 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// ================= 登录接口 (附带开发者 GOD MODE 后门) =================
+// ================= 登录接口 (附带开发者 GOD MODE 后门，新增档案下发) =================
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // 👾 开发者神之模式后门：无视数据库，直接硬编码放行
-        // 账号：dev@polaris.sys | 密码：11319
+        // 👾 开发者神之模式后门
         if (email === 'dev@polaris.sys' && password === '11319') {
             console.log("⚠️ [SECURITY_ALERT] DEVELOPER GOD MODE ACCESSED.");
-            return res.json({ success: true, message: "GOD_MODE UNLOCKED", role: "developer" });
+            return res.json({ 
+                success: true, message: "GOD_MODE UNLOCKED", role: "developer",
+                realName: "SYS.ARCHITECT", studentId: "DEV-00", studentClass: "ROOT"
+            });
         }
 
         // 普通用户的正常数据库比对流程
         const user = await User.findOne({ email: email, password: password });
         if (!user) return res.status(401).json({ success: false, message: "账号或密码错误！" });
 
-        res.json({ success: true, message: "登录成功", role: user.role });
+        // 👇 核心改动：登录成功时，把名字、学号、班级一起打包发给前端
+        res.json({ 
+            success: true, message: "登录成功", 
+            role: user.role, 
+            realName: user.realName, 
+            studentId: user.studentId,
+            studentClass: user.studentClass
+        });
     } catch (error) {
         console.error("登录报错:", error);
         res.status(500).json({ success: false, message: "服务器内部错误" });
     }
 });
 
-// 4. 学生个人数据接口：获取时长、心币、信誉分、活跃任务等个人信息
+// 4. 学生个人数据接口：获取时长、心币、信誉分、活跃任务等个人信息 (新增档案下发)
 app.get('/api/student/profile', async (req, res) => {
     try {
         const email = req.query.email;
@@ -149,9 +158,9 @@ app.get('/api/student/profile', async (req, res) => {
         const anomalyCount = await TaskRecord.countDocuments({ studentEmail: email, status: 'anomaly' });
         
         let reputationScore = 100 + (settledCount * 2) - (anomalyCount * 10);
-        
         let reputationText = "良好";
         let badgeColor = "bg-success";
+        
         if (reputationScore >= 110) {
             reputationText = "极佳";
             badgeColor = "bg-primary";
@@ -168,6 +177,11 @@ app.get('/api/student/profile', async (req, res) => {
         res.json({
             success: true,
             data: {
+                // 👇 核心改动：把刚查到的真实档案加进返回列表
+                realName: user.realName,
+                studentId: user.studentId,
+                studentClass: user.studentClass,
+                // 原有字段
                 totalTime: user.totalTime,
                 totalCoins: user.totalCoins,
                 reputationScore: reputationScore,

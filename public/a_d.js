@@ -1,7 +1,23 @@
-// ================= 全局配置与权限校验 =================
+// ================= 全局配置与身份缓存提取 =================
 const API_BASE_URL = "http://106.14.147.100:3000/api";
-const userEmail = localStorage.getItem('userEmail');
-const userRole = localStorage.getItem('userRole');
+
+// 提取我们在登录页存入的本地数据
+const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole');
+
+// 👇 这三行是新加的！用来把真实姓名、学号、班级从记忆里抽出来
+const realName = localStorage.getItem('realName') || sessionStorage.getItem('realName') || 'UNKNOWN';
+const studentId = localStorage.getItem('studentId') || sessionStorage.getItem('studentId') || '000000';
+const studentClass = localStorage.getItem('studentClass') || sessionStorage.getItem('studentClass') || 'N/A';
+
+// 👇 这一段的作用是：只要网页一加载完，立刻把刚才抽出来的名字和学号，强行拍到侧边栏的 HTML 标签里
+document.addEventListener('DOMContentLoaded', () => {
+    const nameEl = document.getElementById('sidebar-realname');
+    const idEl = document.getElementById('sidebar-studentid');
+    if(nameEl) nameEl.textContent = realName;
+    if(idEl) idEl.textContent = studentId;
+});
+// ==========================================================
 let globalStudentRecordsCache = [];
 
 const brutSwalObj = {

@@ -1,7 +1,23 @@
-// 全局配置与弹窗样式初始化
+// ================= 全局配置与身份缓存提取 =================
 const API_BASE_URL = "http://106.14.147.100:3000/api";
-const userEmail = localStorage.getItem('userEmail');
-const userRole = localStorage.getItem('userRole');
+
+// 提取我们在登录页存入的本地数据
+const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole');
+
+// 👇 这三行是新加的！用来把真实姓名、学号、班级从记忆里抽出来
+const realName = localStorage.getItem('realName') || sessionStorage.getItem('realName') || 'UNKNOWN';
+const studentId = localStorage.getItem('studentId') || sessionStorage.getItem('studentId') || '000000';
+const studentClass = localStorage.getItem('studentClass') || sessionStorage.getItem('studentClass') || 'N/A';
+
+// 👇 这一段的作用是：只要网页一加载完，立刻把刚才抽出来的名字和学号，强行拍到侧边栏的 HTML 标签里
+document.addEventListener('DOMContentLoaded', () => {
+    const nameEl = document.getElementById('sidebar-realname');
+    const idEl = document.getElementById('sidebar-studentid');
+    if(nameEl) nameEl.textContent = realName;
+    if(idEl) idEl.textContent = studentId;
+});
+// ==========================================================
 let globalTasksCache = [];
 let studentDetailChart = null;
 
@@ -281,13 +297,16 @@ window.submitReflection = async function(recordId) {
 
 // ================= 志愿补录 V2 核心逻辑 =================
 
-// 1. 模拟拉取登录学生的个人信息 (后续对接真实的 User Profile 接口)
+// 1. 真实拉取登录学生的个人信息 (用于补录表单)
 function populateRetroProfile() {
-    // 这里先用 localStorage 里的邮箱做示范，真正落地时从 profile 接口获取
+    // 如果找不到这些框，就不执行，防止报错
+    if(!document.getElementById('retro-email')) return;
+
+    // 把刚才提取的真实数据，塞进只读的表单框里
     document.getElementById('retro-email').textContent = userEmail;
-    document.getElementById('retro-name').textContent = "PULL_WAITING";
-    document.getElementById('retro-id').textContent = "PULL_WAITING";
-    // ... 其他信息预留
+    document.getElementById('retro-name').textContent = realName;
+    document.getElementById('retro-id').textContent = studentId;
+    document.getElementById('retro-class').textContent = studentClass;
 }
 
 // 2. 自动计算服务时长
