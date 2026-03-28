@@ -296,7 +296,7 @@ async function runTutorialDemo() {
 
     // 剧情 B: 移动到 AI 助手气泡
     // 1. 找到你要点击的那个 AI 按钮（这里假设它的 ID 是 #chat-toggle）
-    const aiButton = document.querySelector('#chat-toggle'); 
+    const aiButton = document.querySelector('#btn-ai-refine'); 
     
     if (aiButton) {
         // 2. 计算这个按钮在屏幕上的精确位置
