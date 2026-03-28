@@ -5,7 +5,7 @@
 
 A lightweight, high-performance multi-role dashboard system custom-built for **HackMIT China 2026**. This project features a zero-dependency vanilla frontend and a robust Node.js backend, optimized for lightning-fast loading and seamless Vercel deployment.
 
-[**Explore Live Demo »**](#) ---
+[**Explore Live Demo »**](#https://hack-mit-china2026.vercel.app/) ---
 
 ## 📖 Table of Contents
 - [Key Features](#-key-features)
