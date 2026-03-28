@@ -10,7 +10,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 // 优先读取云端环境变量，如果没有，则降级使用本地数据库（用于本地开发）
-const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/timebank';
+const mongoURI = process.env.MONGODB_URI || 'mongodb://timebank:1D2U2S2c0v8c13@127.0.0.1:27017/timebank';
 
 mongoose.connect(mongoURI)
     .then(() => console.log('✅ 数据库连接成功！TimeBank 记忆中枢已上线！'))
