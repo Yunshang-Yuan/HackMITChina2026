@@ -474,6 +474,7 @@ async function dragSlider(selector, targetValue) {
 async function runTutorialDemo() {
     console.log(">> 🎬 SYSTEM: Polaris Demo Sequence Initiated...");
 
+    // 1. 生成幽灵鼠标
     let cursor = document.getElementById('ghost-cursor');
     if (!cursor) {
         cursor = document.createElement('div');
@@ -483,7 +484,18 @@ async function runTutorialDemo() {
 
     await wait(1000);
 
-    // 1. Task Title & Draft Description
+    // 🌟 导演加戏：先精准点击左侧栏菜单，确保页面切到了表单页！
+    await moveCursorTo('#nav-publish'); 
+    const navBtn = document.querySelector('#nav-publish');
+    if (navBtn) {
+        navBtn.classList.add('tut-click-blink');
+        await wait(300);
+        navBtn.click(); 
+        navBtn.classList.remove('tut-click-blink');
+    }
+    await wait(500);
+
+    // 2. Task Title & Draft Description
     await moveCursorTo('#task-title');
     await typeIn('#task-title', 'FRC Regional: Pit Crew & Scouting', 50);
     
