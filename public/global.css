@@ -28,7 +28,7 @@ body.dark-mode .text-dark { color: var(--brut-black) !important; }
 body.dark-mode .bg-dark { background-color: var(--brut-black) !important; color: var(--brut-white) !important; }
 body.dark-mode .text-muted { color: #b6b6b6 !important; }
 
-/* 重点修复：让所有边框类在深色模式下强制使用 #b6b6b6 */
+/* 1. 强制所有边框使用中灰色 */
 body.dark-mode .border, 
 body.dark-mode .border-top, 
 body.dark-mode .border-end, 
@@ -39,8 +39,64 @@ body.dark-mode .brut-card,
 body.dark-mode .brut-table,
 body.dark-mode .brut-table td,
 body.dark-mode .sys-logo,
-body.dark-mode .nav-pills .nav-link { 
+body.dark-mode .nav-pills .nav-link,
+body.dark-mode .badge-brut,
+body.dark-mode .btn-brut,
+body.dark-mode .modal-content,
+body.dark-mode .brut-input { 
     border-color: var(--brut-line) !important; 
+}
+
+/* 2. 核心修复：将所有硬核阴影从纯黑改为中灰色 (#b6b6b6) */
+body.dark-mode .brut-card,
+body.dark-mode .nav-pills .nav-link,
+body.dark-mode .btn-brut,
+body.dark-mode .badge-brut,
+body.dark-mode .modal-content {
+    box-shadow: 4px 4px 0px var(--brut-line) !important;
+}
+
+/* 3. 针对小标签 (Badge) 和按钮 (Button) 的背景颜色修正 */
+body.dark-mode .badge-brut,
+body.dark-mode .btn-brut {
+    background-color: var(--brut-white) !important; /* 变为深灰色背景 */
+    color: var(--brut-black) !important;           /* 浅灰色文字 */
+}
+
+/* 4. 悬浮状态颜色对齐 */
+body.dark-mode .nav-pills .nav-link:hover,
+body.dark-mode .btn-brut:hover {
+    background: var(--brut-black); 
+    color: var(--brut-white);
+    box-shadow: 4px 4px 0px var(--brut-red) !important;
+}
+
+/* --- 1. 资产卡片：下划线随系统颜色变化 --- */
+.status-label {
+    border-bottom: 2px solid var(--brut-line); /* 使用之前定义的变量，深色模式会自动变灰 */
+}
+
+/* --- 2. 信誉卡片：强制红色标题和下划线 (不随模式变化) --- */
+.card-reputation .status-label.text-danger {
+    color: var(--brut-red) !important;
+    border-bottom-color: var(--brut-red) !important; /* 强制下划线为红色 */
+}
+
+/* --- 3. 深色模式下的特殊处理 (参考你的图片 2) --- */
+body.dark-mode .card-reputation {
+    background-color: #d1d1ca !important; /* 变回你图片 2 所示的浅灰色/米黄色背景 */
+    color: #0a0a0a !important;           /* 文字强行变回黑色，提高对比度 */
+    box-shadow: 4px 4px 0px #0a0a0a !important; /* 阴影也变回黑色，产生硬核立体感 */
+}
+
+body.dark-mode .card-reputation .status-val {
+    color: #0a0a0a !important;           /* 数值变回黑色 */
+}
+
+body.dark-mode .card-reputation #stat-rep-badge {
+    background-color: #0a0a0a !important; /* 里面的“良好”标签变黑底白字 */
+    color: #ffffff !important;
+    border-color: #0a0a0a !important;
 }
 
 /* --- 3. BASE & RESET --- */
