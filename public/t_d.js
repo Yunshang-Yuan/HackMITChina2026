@@ -1,86 +1,15 @@
-// ================= 全局配置与身份缓存提取 =================
-//const API_BASE_URL = "http://106.14.147.100:3000/api";
-const API_BASE_URL = "/api";
-
-// 提取我们在登录页存入的本地数据
-const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
-const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole');
-
-// 👇 这三行是新加的！用来把真实姓名、学号、班级从记忆里抽出来
-const realName = localStorage.getItem('realName') || sessionStorage.getItem('realName') || 'UNKNOWN';
-const studentId = localStorage.getItem('studentId') || sessionStorage.getItem('studentId') || '000000';
-const studentClass = localStorage.getItem('studentClass') || sessionStorage.getItem('studentClass') || 'N/A';
-
-// 👇 这一段的作用是：只要网页一加载完，立刻把刚才抽出来的名字和学号，强行拍到侧边栏的 HTML 标签里
-document.addEventListener('DOMContentLoaded', () => {
-    const nameEl = document.getElementById('sidebar-realname');
-    const idEl = document.getElementById('sidebar-studentid');
-    if(nameEl) nameEl.textContent = realName;
-    if(idEl) idEl.textContent = studentId;
-});
-// ==========================================================
+// ================= TEACHER 业务逻辑 (已全量瘦身) =================
 let globalStudentRecordsCache = [];
 
-const brutSwalObj = {
-    customClass: { popup: 'brut-modal', confirmButton: 'btn btn-brut btn-brut-red mx-2', cancelButton: 'btn btn-brut mx-2' },
-    buttonsStyling: false
-};
-const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: 'var(--brut-black)', color: 'var(--brut-white)', customClass: { popup: 'rounded-0 border border-white' }});
-
+// 1. 权限校验
 if (!userEmail || userRole !== 'teacher') {
     Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '无教师权限。' }).then(() => { window.location.href = "login.html"; });
 } 
 
-// ================= 暗黑模式切换 =================
-const themeBtn = document.getElementById('btn-theme-toggle');
-if (localStorage.getItem('sys-theme') === 'dark') {
-    document.body.classList.add('dark-mode');
-    themeBtn.innerHTML = '<i class="bi bi-sun-fill"></i>';
+// 2. 初始化全局雷达图 (依赖 global.ui.js 提供的方法)
+if (typeof initGlobalRadarChart === 'function') {
+    initGlobalRadarChart('radarChart');
 }
-themeBtn.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('sys-theme', isDark ? 'dark' : 'light');
-    themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-stars-fill"></i>';
-    updateRadarTheme(isDark);
-});
-
-// ================= 雷达图初始化 =================
-let radarChart;
-const ctx = document.getElementById('radarChart').getContext('2d');
-function initRadarChart() {
-    const isDark = document.body.classList.contains('dark-mode');
-    const lineColor = isDark ? '#f4f4f0' : '#000000';
-    radarChart = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: ['EXEC', 'TEAM', 'COMM', 'LEAD', 'INNO'],
-            datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: 'rgba(230, 33, 23, 0.2)', borderColor: '#e62117', pointBackgroundColor: '#e62117', borderWidth: 2 }]
-        },
-        options: {
-            scales: { r: { min: 0, max: 5, angleLines: { color: lineColor }, grid: { color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)' }, pointLabels: { font: { size: 10, weight: 'bold', family: 'Courier New' }, color: lineColor }, ticks: { stepSize: 1, display: false } } },
-            plugins: { legend: { display: false } }
-        }
-    });
-}
-initRadarChart();
-
-function updateRadarTheme(isDark) {
-    if(!radarChart) return;
-    const lineColor = isDark ? '#f4f4f0' : '#000000';
-    radarChart.options.scales.r.angleLines.color = lineColor;
-    radarChart.options.scales.r.pointLabels.color = lineColor;
-    radarChart.options.scales.r.grid.color = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-    radarChart.update();
-}
-
-document.querySelectorAll('.dim-slider').forEach(slider => {
-    slider.addEventListener('input', (e) => {
-        document.getElementById(`val-${e.target.id}`).textContent = e.target.value;
-        radarChart.data.datasets[0].data = [ document.getElementById('dim1').value, document.getElementById('dim2').value, document.getElementById('dim3').value, document.getElementById('dim4').value, document.getElementById('dim5').value ];
-        radarChart.update();
-    });
-});
 
 // ================= 导航切换逻辑 =================
 const navIds = ['nav-publish', 'nav-manage', 'nav-audit'];
@@ -106,7 +35,7 @@ document.getElementById('nav-publish').onclick = (e) => { e.preventDefault(); sw
 document.getElementById('nav-manage').onclick = (e) => { e.preventDefault(); switchTab(1); loadMyTasks(); };
 document.getElementById('nav-audit').onclick = (e) => { e.preventDefault(); switchTab(2); loadAuditRecords(); };
 
-// ================= 任务发布 =================
+// ================= 核心业务 API =================
 document.getElementById('btn-submit-task').addEventListener('click', async (e) => {
     e.preventDefault();
     const startDate = document.getElementById('task-start').value;
@@ -127,14 +56,17 @@ document.getElementById('btn-submit-task').addEventListener('click', async (e) =
         if (data.success) {
             Swal.fire({ ...brutSwalObj, title: 'DEPLOYED', text: data.message, icon: 'success' });
             document.getElementById('task-publish-form').reset();
-            radarChart.data.datasets[0].data = [0,0,0,0,0]; radarChart.update();
+            // 访问 global.ui.js 中的全局雷达图实例重置数据
+            if(typeof globalRadarChart !== 'undefined' && globalRadarChart) { 
+                globalRadarChart.data.datasets[0].data = [0,0,0,0,0]; 
+                globalRadarChart.update(); 
+            }
             document.querySelectorAll('.dim-slider').forEach(s => document.getElementById(`val-${s.id}`).textContent = 0);
             document.getElementById('nav-manage').click();
         } else Swal.fire({ ...brutSwalObj, title: 'FAILED', text: data.message, icon: 'error' });
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION FAILED.', icon: 'error' }); }
 });
 
-// ================= 加载任务进度 =================
 async function loadMyTasks() {
     const tbody = document.getElementById('my-tasks-body');
     try {
@@ -159,7 +91,6 @@ async function loadMyTasks() {
     } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
 }
 
-// ================= 加载学生考核记录 =================
 async function loadAuditRecords() {
     const tbody = document.getElementById('audit-records-body');
     try {
@@ -201,7 +132,6 @@ async function loadAuditRecords() {
     } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
 }
 
-// ================= 教师操作 =================
 window.deductTime = async function(recordId) {
     const { value: hours } = await Swal.fire({ ...brutSwalObj, title: 'DEDUCT HOURS', input: 'number', inputAttributes: { step: 0.5 }, showCancelButton: true });
     if (!hours || hours <= 0) return;
@@ -250,20 +180,3 @@ window.markAnomaly = async function(recordId) {
         if (data.success) { Toast.fire({ icon: 'success', title: 'FLAGGED.' }); loadAuditRecords(); }
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
-
-// ================= 系统设置按钮交互 =================
-document.getElementById('btn-settings').addEventListener('click', () => {
-    Swal.fire({
-        ...brutSwalObj,
-        title: 'SYS.SETTINGS',
-        text: 'MODULE UNDER CONSTRUCTION (系统配置模块施工中，准备接入后续扩展功能)',
-        icon: 'info',
-        confirmButtonText: 'ACKNOWLEDGE'
-    });
-});
-
-document.getElementById('btn-logout').addEventListener('click', async () => {
-    const res = await Swal.fire({ ...brutSwalObj, title: 'TERMINATE SESSION?', icon: 'warning', showCancelButton: true });
-    if(res.isConfirmed) { localStorage.clear(); window.location.href = 'login.html'; }
-});
-
