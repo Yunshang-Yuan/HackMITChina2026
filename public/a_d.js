@@ -431,7 +431,7 @@ async function runTutorialDemo() {
     await wait(1000);
 
     // 2. 模拟点击左侧菜单 (如果需要的话)
-    await moveCursorTo('.nav-link.active'); 
+    await moveCursorTo('#nav-publish'); 
     
     // 3. 填写标题和敷衍的描述
     await moveCursorTo('#task-title');
