@@ -331,55 +331,57 @@ document.getElementById('retro-travel-toggle').addEventListener('change', functi
     }
 });
 
-// 4. 提交表单 (预留API对接)
+// 4. 真实的提交表单逻辑 (直连 MongoDB)
 document.getElementById('btn-submit-retro-v2').addEventListener('click', async () => {
-    // 检查必填项和声明勾选
+    // 抓取表单数据
     const certify = document.getElementById('retro-certify').checked;
     const supEmail = document.getElementById('retro-sup-email').value;
     const reflection = document.getElementById('retro-reflection').value;
+    const orgName = document.getElementById('retro-org-name').value;
+    const position = document.getElementById('retro-position').value;
     const totalHours = parseFloat(document.getElementById('retro-total-hours').getAttribute('data-hours')) || 0;
 
+    // 前端防呆校验
     if (!certify) return Swal.fire({ ...brutSwalObj, title: 'DECLARATION_REQ', text: '请先勾选底部的真实性声明！', icon: 'warning' });
     if (totalHours <= 0) return Swal.fire({ ...brutSwalObj, title: 'TIME_ERR', text: '服务时长必须大于 0！', icon: 'error' });
-    if (!supEmail || !reflection) return Swal.fire({ ...brutSwalObj, title: 'DATA_MISSING', text: '主管邮箱与个人心得为必填项！', icon: 'error' });
+    if (!supEmail || !reflection || !orgName || !position) return Swal.fire({ ...brutSwalObj, title: 'DATA_MISSING', text: '主管邮箱、组织名称、职位和心得均为必填项！', icon: 'error' });
 
-    // 构建发给后端的 Payload (准备对接)
-    const payload = {
-        studentEmail: userEmail,
-        date: document.getElementById('retro-date').value,
-        startTime: document.getElementById('retro-start').value,
-        endTime: document.getElementById('retro-end').value,
-        totalHours: totalHours,
-        travelIncluded: document.getElementById('retro-travel-toggle').checked,
-        travelDesc: document.getElementById('retro-travel-desc').value,
-        orgName: document.getElementById('retro-org-name').value,
-        orgType: document.getElementById('retro-org-type').value,
-        orgAddress: document.getElementById('retro-org-address').value,
-        supName: document.getElementById('retro-sup-name').value,
-        supTitle: document.getElementById('retro-sup-title').value,
-        supEmail: supEmail,
-        position: document.getElementById('retro-position').value,
-        duties: document.getElementById('retro-duties').value,
-        reflection: reflection,
-        status: 'pending_supervisor' // 提交后进入等待主管验证阶段
-    };
+    // 把活动名称和职位拼接一下发给后端
+    const eventNameCombined = `${orgName} - ${position}`;
+    // 记录主管验证邮箱作为“证据”
+    const evidenceStr = `主管邮箱验签: ${supEmail}`;
 
-    // 模拟发送请求流程 (真实接口写好后替换此处的 fetch)
-    Swal.fire({
-        ...brutSwalObj,
-        title: 'SENDING_VERIFICATION...',
-        text: `系统正在向 ${supEmail} 发送授权签名邮件，请提醒主管查收。`,
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'MOCK_SUBMIT (模拟提交)'
-    }).then((result) => {
-        if(result.isConfirmed) {
-            Swal.fire({ ...brutSwalObj, title: 'SUBMITTED', text: '补录表单已挂起！等待主管验签后进入 Admin 最终审核流。', icon: 'success' });
+    // 弹出加载动画
+    Swal.fire({ ...brutSwalObj, title: 'UPLOADING...', text: '正在向后端记忆中枢写入数据...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+    try {
+        // 真正的发送请求！
+        const response = await fetch(`${API_BASE_URL}/student/retro-entry`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                studentEmail: userEmail,
+                eventName: eventNameCombined,
+                hours: totalHours,
+                evidence: evidenceStr,
+                reflection: reflection
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            Swal.fire({ ...brutSwalObj, title: 'SUBMITTED', text: '补录已提交！主管验签模拟通过，已进入 Admin 审核流。', icon: 'success' });
+            // 清空表单
             document.getElementById('form-retro-v2').reset();
             document.getElementById('retro-total-hours').innerHTML = `0.0<span class="fs-5">H</span>`;
+            document.getElementById('retro-total-hours').setAttribute('data-hours', 0);
             document.getElementById('retro-travel-desc-box').classList.add('d-none');
+        } else {
+            Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
         }
-    });
+    } catch (error) {
+        Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: '服务器连接断开，请检查网络。', icon: 'error' });
+    }
 });
 
 // 在初始化时调用拉取个人信息

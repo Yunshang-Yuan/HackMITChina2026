@@ -399,15 +399,22 @@ app.get('/api/teacher/student-records', async (req, res) => {
 
 // ================= 新增模块：志愿补录与全局数据管理 =================
 
-// 1. 学生提交志愿补录申请
+// 1. 学生提交志愿补录申请 (V2 完整版)
 app.post('/api/student/retro-entry', async (req, res) => {
     try {
-        const { studentEmail, eventName, hours, evidence } = req.body;
-        if (!studentEmail || !eventName || !hours || !evidence) {
+        // 增加了解析 reflection（心得）字段
+        const { studentEmail, eventName, hours, evidence, reflection } = req.body;
+        if (!studentEmail || !eventName || !hours) {
             return res.status(400).json({ success: false, message: "参数不完整" });
         }
         
-        const newEntry = new RetroEntry({ studentEmail, eventName, hours, evidence });
+        const newEntry = new RetroEntry({ 
+            studentEmail, 
+            eventName, 
+            hours, 
+            evidence: evidence || "系统内发信验证",
+            reflection: reflection // 存入心得
+        });
         await newEntry.save();
         res.json({ success: true, message: "补录申请已提交" });
     } catch (error) {
