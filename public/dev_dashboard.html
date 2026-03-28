@@ -3,118 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>时间银行 - 开发者中枢</title>
+    <title>SYS.OVERRIDE | DEV_NODE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="d_d.css">
-</head>
-<body>
-    <div class="d-flex">
-        <div class="sidebar bg-black text-white p-3 d-flex flex-column">
-            <a href="#" class="d-flex align-items-center mb-4 text-white text-decoration-none">
-                <i class="bi bi-cpu fs-3 me-2 text-info"></i>
-                <span class="fs-4 fw-bold">System <small class="fs-6 text-muted">Dev</small></span>
-            </a>
-            <hr class="text-secondary">
-            <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item mb-2">
-                    <a href="#" class="nav-link active bg-info text-dark fw-bold">
-                        <i class="bi bi-globe me-2"></i> 全局数据看板
-                    </a>
-                </li>
-                <li class="nav-item mb-2">
-                    <a href="#" class="nav-link text-white">
-                        <i class="bi bi-buildings me-2"></i> 入驻学校管理
-                    </a>
-                </li>
-                <li class="nav-item mb-2">
-                    <a href="#" class="nav-link text-white">
-                        <i class="bi bi-terminal me-2"></i> 系统日志 (Logs)
-                    </a>
-                </li>
-            </ul>
-            <hr class="text-secondary">
-            <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-code-square fs-4 me-2 text-info"></i>
-                    <strong>SuperAdmin</strong>
-                </a>
-            </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="l.css"> 
+    <link rel="stylesheet" href="d_d.css"> </head>
+<body class="dev-body d-flex flex-column align-items-center p-3 p-md-5">
+
+    <div class="w-100 d-flex justify-content-between align-items-center mb-4 dev-header-container">
+        <div>
+            <span class="badge dev-badge-danger mb-2">ROOT_ACCESS // GOD_MODE</span>
+            <h2 class="m-0 font-monospace fw-black text-uppercase dev-title">Database_Matrix</h2>
         </div>
-
-        <div class="flex-grow-1 bg-light">
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom px-4 py-3">
-                <span class="navbar-brand fw-bold text-info"><i class="bi bi-activity"></i> 核心数据库总览 (Global Overview)</span>
-            </nav>
-
-            <div class="container-fluid p-4">
-                <div class="row g-4 mb-5">
-                    <div class="col-md-3">
-                        <div class="card border-0 shadow-sm bg-primary text-white rounded-4 h-100">
-                            <div class="card-body p-4">
-                                <h6 class="text-white-50 fw-bold">入驻学校总数</h6>
-                                <h2 class="fw-bold mb-0">3 <small class="fs-6 text-white-50">所</small></h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card border-0 shadow-sm bg-success text-white rounded-4 h-100">
-                            <div class="card-body p-4">
-                                <h6 class="text-white-50 fw-bold">系统总注册用户</h6>
-                                <h2 class="fw-bold mb-0">1,250 <small class="fs-6 text-white-50">人</small></h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card border-0 shadow-sm bg-warning text-dark rounded-4 h-100">
-                            <div class="card-body p-4">
-                                <h6 class="text-black-50 fw-bold">累计产生志愿时长</h6>
-                                <h2 class="fw-bold mb-0">8,420 <small class="fs-6 text-black-50">h</small></h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card border-0 shadow-sm bg-danger text-white rounded-4 h-100">
-                            <div class="card-body p-4">
-                                <h6 class="text-white-50 fw-bold">全网累计完成任务</h6>
-                                <h2 class="fw-bold mb-0">542 <small class="fs-6 text-white-50">次</small></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill text-secondary"></i> 各节点（学校）活跃度监控</h5>
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-0">
-                        <table class="table align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-4">学校 ID (Tenant)</th>
-                                    <th>活跃学生数</th>
-                                    <th>总流转时长</th>
-                                    <th>状态</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="ps-4 fw-bold">你们学校 (School_A)</td>
-                                    <td>850</td>
-                                    <td>5,200 h</td>
-                                    <td><span class="badge bg-success">正常 (Online)</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4 fw-bold">友校测试 (School_B)</td>
-                                    <td>400</td>
-                                    <td>3,220 h</td>
-                                    <td><span class="badge bg-success">正常 (Online)</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <button class="btn btn-dev-outline" id="btn-logout" title="TERMINATE SESSION">
+            <i class="bi bi-power me-2"></i>EXIT_SYS
+        </button>
     </div>
+
+    <div class="dev-card p-4 w-100">
+        
+        <div class="d-flex justify-content-between align-items-end border-bottom border-secondary pb-3 mb-4">
+            <div>
+                <h5 class="font-monospace fw-bold m-0" style="color: var(--dev-text);">COLLECTION: [USERS]</h5>
+                <small class="font-monospace dev-muted" id="db-status">SCANNING NODES...</small>
+            </div>
+            <button class="btn btn-dev-primary btn-sm px-3 py-2" id="btn-refresh">
+                <i class="bi bi-arrow-clockwise me-1"></i>FORCE_SYNC
+            </button>
+        </div>
+
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table mb-0 dev-table" id="users-table">
+                <thead>
+                    <tr>
+                        <th>SYS_ROLE</th>
+                        <th>REAL_NAME</th>
+                        <th>USER_ID (EMAIL)</th>
+                        <th>STUDENT_ID</th>
+                        <th>TIME_COINS</th>
+                        <th class="text-center">EXECUTE_COMMAND</th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody">
+                    <tr><td colspan="6" class="text-center py-5 font-monospace fw-bold">FETCHING DATABASE...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="d_d.js"></script>
 </body>
 </html>

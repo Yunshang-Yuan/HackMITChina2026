@@ -548,6 +548,77 @@ app.get('/api/admin/all-students', async (req, res) => {
     }
 });
 
+// ============================================================================
+// 👾 DEVELOPER GOD_MODE API (开发者专属高权限接口)
+// ============================================================================
+
+// 1. 获取全量数据库节点 (Database Matrix)
+app.get('/api/dev/users', async (req, res) => {
+    try {
+        // 从数据库里拉取所有用户，为了安全和传输速度，我们只提取需要的字段，不传密码
+        const users = await User.find({}, 'email role realName studentId totalCoins createdAt').sort({ createdAt: -1 });
+        res.json({ success: true, users: users });
+    } catch (error) {
+        console.error("拉取全量数据失败:", error);
+        res.status(500).json({ success: false, message: "数据库扫描失败" });
+    }
+});
+
+// 2. 覆写数据节点 (Override Node)
+app.put('/api/dev/users/:email', async (req, res) => {
+    try {
+        const targetEmail = req.params.email;
+        const { realName, role } = req.body;
+
+        // 不允许通过 API 修改开发者自己的权限（防呆设计，防止把自己踢出局）
+        if (targetEmail === 'dev@polaris.sys') {
+            return res.status(403).json({ success: false, message: "SYSTEM_DENIED: 不能修改根节点权限。" });
+        }
+
+        const updatedUser = await User.findOneAndUpdate(
+            { email: targetEmail }, 
+            { realName: realName, role: role },
+            { new: true } // 返回修改后的新数据
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "找不到该目标节点" });
+        }
+
+        res.json({ success: true, message: "节点覆写成功" });
+    } catch (error) {
+        console.error("修改节点报错:", error);
+        res.status(500).json({ success: false, message: "执行覆写指令失败" });
+    }
+});
+
+// 3. 抹除数据节点 (Terminate Node)
+app.delete('/api/dev/users/:email', async (req, res) => {
+    try {
+        const targetEmail = req.params.email;
+
+        // 绝对防御：禁止删除开发者本体
+        if (targetEmail === 'dev@polaris.sys') {
+            return res.status(403).json({ success: false, message: "SYSTEM_DENIED: 根节点不可摧毁。" });
+        }
+
+        const deletedUser = await User.findOneAndDelete({ email: targetEmail });
+        
+        if (!deletedUser) {
+            return res.status(404).json({ success: false, message: "该节点不存在或已被摧毁" });
+        }
+
+        // [进阶预留] 如果删除了用户，最好把他的任务记录也一起删掉（级联删除）
+        // await TaskRecord.deleteMany({ studentEmail: targetEmail }); 
+
+        res.json({ success: true, message: "节点已彻底抹除" });
+    } catch (error) {
+        console.error("删除节点报错:", error);
+        res.status(500).json({ success: false, message: "执行抹除指令失败" });
+    }
+});
+// ============================================================================
+
 // 10. 服务启动：监听端口，启动后端服务
 app.listen(PORT, () => {
     console.log(`✅ 服务器启动完毕！正在监听 ${PORT} 端口...`);
