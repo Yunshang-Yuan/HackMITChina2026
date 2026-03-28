@@ -1,17 +1,16 @@
-// ================= ADMIN 业务逻辑 (已瘦身) =================
+// #region [01] Authorization & Initial State (权限校验与初始加载)
 let globalStudentRecordsCache = [];
 
-// 1. 权限校验 (变量直接从 global.ui.js 继承)
 if (!userEmail || userRole !== 'admin') {
     Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '无管理员权限。' }).then(() => { window.location.href = "login.html"; });
 } else {
     loadPendingTasks();
 }
 
-// 2. 初始化发布任务的雷达图 (调用全局方法)
 initGlobalRadarChart('radarChart');
+// #endregion
 
-// ================= 导航切换逻辑 =================
+// #region [02] Navigation & Tab Routing (导航切换与路由逻辑)
 const navIds = ['nav-pending', 'nav-retro', 'nav-publish', 'nav-manage', 'nav-assess', 'nav-students'];
 const secIds = ['section-pending', 'section-retro', 'section-publish', 'section-manage', 'section-assess', 'section-students'];
 const titles = ["TERMINAL // 任务上架审批", "TERMINAL // 志愿补录审批", "TERMINAL // 发布官方任务", "TERMINAL // 官方任务进度", "TERMINAL // 官方考核结算", "TERMINAL // 全校学生数据"];
@@ -37,8 +36,9 @@ document.getElementById('nav-publish').onclick = (e) => { e.preventDefault(); sw
 document.getElementById('nav-manage').onclick = (e) => { e.preventDefault(); switchTab(3); loadMyTasks(); };
 document.getElementById('nav-assess').onclick = (e) => { e.preventDefault(); switchTab(4); loadAssessRecords(); };
 document.getElementById('nav-students').onclick = (e) => { e.preventDefault(); switchTab(5); loadAllStudents(); };
+// #endregion
 
-// ================= 核心业务 API =================
+// #region [03] Task Approval & Audit (任务审批与管理)
 async function loadPendingTasks() {
     const tbody = document.getElementById('pending-table-body');
     try {
@@ -84,8 +84,9 @@ window.handleAudit = async function(taskId, action) {
         else { Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' }); }
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
+// #endregion
 
-// 志愿补录审核
+// #region [04] Retroactive Application Review (志愿补录申请审核)
 async function loadRetroEntries() {
     const tbody = document.getElementById('retro-list-body');
     try {
@@ -143,8 +144,9 @@ async function executeRetroAudit(entryId, action, adminScore) {
         else { Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' }); }
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'NETWORK CONNECTION LOST.', icon: 'error' }); }
 }
+// #endregion
 
-// 官方任务发布
+// #region [05] Official Task Deployment (官方任务发布逻辑)
 document.getElementById('btn-admin-publish').addEventListener('click', async (e) => {
     e.preventDefault();
     const startDate = document.getElementById('task-start').value;
@@ -171,9 +173,11 @@ document.getElementById('btn-admin-publish').addEventListener('click', async (e)
         } else Swal.fire({ ...brutSwalObj, title: 'FAILED', text: data.message, icon: 'error' });
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION FAILED.', icon: 'error' }); }
 });
+// #endregion
 
-// 其他加载数据的 API 保持原样
-async function loadMyTasks() {const tbody = document.getElementById('my-tasks-body');
+// #region [06] Data Retrieval Helpers (数据拉取辅助函数)
+async function loadMyTasks() {
+    const tbody = document.getElementById('my-tasks-body');
     try {
         const response = await fetch(`${API_BASE_URL}/teacher/my-tasks?email=${encodeURIComponent(userEmail)}`);
         const result = await response.json();
@@ -190,7 +194,9 @@ async function loadMyTasks() {const tbody = document.getElementById('my-tasks-bo
                 </tr>`;
             });
         } else tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 font-monospace fw-bold text-muted">NO OFFICIAL TASKS DEPLOYED.</td></tr>';
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }}
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
+}
+
 async function loadAssessRecords() {
     const tbody = document.getElementById('audit-records-body');
     try {
@@ -226,7 +232,11 @@ async function loadAssessRecords() {
                 </tr>`;
             });
         } else tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 font-monospace fw-bold text-muted">NO RECORDS FOUND.</td></tr>';
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }}
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
+}
+// #endregion
+
+// #region [07] Supervisory Management Tools (教师/督导管理工具)
 window.deductTime = async function(recordId) {
     const { value: hours } = await Swal.fire({ ...brutSwalObj, title: 'DEDUCT HOURS', input: 'number', inputAttributes: { step: 0.5 }, showCancelButton: true });
     if (!hours || hours <= 0) return;
@@ -237,7 +247,9 @@ window.deductTime = async function(recordId) {
         const data = await response.json();
         if (data.success) { Toast.fire({ icon: 'success', title: 'DEDUCTED.' }); loadAssessRecords(); } 
         else Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
-    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }};
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
+};
+
 window.openReviewModal = function(recordId) {
     const record = globalStudentRecordsCache.find(r => r._id === recordId);
     if (!record) return;
@@ -246,19 +258,16 @@ window.openReviewModal = function(recordId) {
     document.getElementById('modal-bonus-input').value = 0;
     document.getElementById('modal-current-record-id').value = recordId;
 
-    // 👇 ========= 新增的这两步 ========= 👇
-    // 1. 把任务名称和时长绑到 AI 打分按钮的 dataset 上
     const aiBtn = document.getElementById('btn-ai-evaluate');
     if (aiBtn) {
         aiBtn.dataset.taskTitle = record.taskId.title;
         aiBtn.dataset.taskHours = record.taskId.duration;
     }
-    // 2. 每次打开新弹窗时，把上一次的 AI 评估结果框隐藏掉
     document.getElementById('ai-eval-result-box').style.display = 'none';
-    // 👆 =============================== 👆
 
     new bootstrap.Modal(document.getElementById('reviewModal')).show();
 };
+
 document.getElementById('btn-submit-review').addEventListener('click', async () => {
     const recordId = document.getElementById('modal-current-record-id').value;
     const bonusAmount = parseInt(document.getElementById('modal-bonus-input').value) || 0;
@@ -270,7 +279,9 @@ document.getElementById('btn-submit-review').addEventListener('click', async () 
             bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
             loadAssessRecords(); 
         } else Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
-    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }});
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
+});
+
 window.markAnomaly = async function(recordId) {
     const res = await Swal.fire({ ...brutSwalObj, title: 'FLAG AS ANOMALY?', icon: 'warning', showCancelButton: true });
     if(!res.isConfirmed) return;
@@ -279,10 +290,13 @@ window.markAnomaly = async function(recordId) {
         const response = await fetch(`${API_BASE_URL}/teacher/mark-anomaly`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, reason: reason||"N/A" }) });
         const data = await response.json();
         if (data.success) { Toast.fire({ icon: 'success', title: 'FLAGGED.' }); loadAssessRecords(); }
-    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }};
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
+};
+// #endregion
+
+// #region [08] Global Student Analytics (全校学生数据总览)
 async function loadAllStudents() {
     const tbody = document.getElementById('all-students-body');
-    // 注意：需要后端提供 /api/admin/all-students 接口
     try {
         const response = await fetch(`${API_BASE_URL}/admin/all-students`);
         const result = await response.json();
@@ -300,15 +314,14 @@ async function loadAllStudents() {
         } else {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 font-monospace fw-bold text-muted">NO STUDENT DATA FOUND.</td></tr>';
         }
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED (WAITING FOR API).</td></tr>'; }}
-    // ================= 新增：AI 辅助功能 =================
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
+}
+// #endregion
 
-// 1. AI 润色任务描述
+// #region [09] AI Services Hub (AI 服务中心)
 document.getElementById('btn-ai-refine')?.addEventListener('click', async function() {
     const descInput = document.getElementById('task-desc');
     const originalText = descInput.value.trim();
-    
-    // 复用你已经配好的 SweetAlert (Toast)
     if (!originalText) return Toast.fire({ icon: 'warning', title: '请输入基础描述！' });
 
     const originalBtnHtml = this.innerHTML;
@@ -322,7 +335,6 @@ document.getElementById('btn-ai-refine')?.addEventListener('click', async functi
             body: JSON.stringify({ description: originalText })
         });
         const data = await response.json();
-        
         if (data.success) {
             descInput.value = data.response;
             Toast.fire({ icon: 'success', title: '描述已扩写！' });
@@ -335,13 +347,10 @@ document.getElementById('btn-ai-refine')?.addEventListener('click', async functi
     }
 });
 
-// 2. AI 评估志愿心得
 document.getElementById('btn-ai-evaluate')?.addEventListener('click', async function() {
     const reflectionText = document.getElementById('modal-reflection-text').textContent;
-    // 从按钮自定义属性上读取上下文（下文会教你怎么绑上去）
     const taskTitle = this.dataset.taskTitle || '未知任务';
     const taskHours = this.dataset.taskHours || '未知时长';
-    
     const resultBox = document.getElementById('ai-eval-result-box');
     const resultContent = document.getElementById('ai-eval-content');
 
@@ -350,8 +359,6 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
     const originalBtnHtml = this.innerHTML;
     this.innerHTML = '<i class="bi bi-cpu-fill"></i> 分析中...';
     this.disabled = true;
-    
-    // 显示评估框，呈现极客风的 Loading 动画
     resultBox.style.display = 'block';
     resultContent.innerHTML = '<span class="text-danger fw-bold blinking-text">CONNECTING TO AI CORE...</span>';
 
@@ -362,10 +369,7 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
             body: JSON.stringify({ reflection: reflectionText, taskTitle, hours: taskHours })
         });
         const data = await response.json();
-        
         if (data.success) {
-            // 注意：如果你把之前的 parseMarkdown 放到 global.ui.js 里了，这里就可以直接调用。
-            // 否则这里可以用 data.response.replace(/\n/g, '<br>') 做一个简单的换行回退处理。
             resultContent.innerHTML = typeof parseMarkdown === 'function' ? parseMarkdown(data.response) : data.response.replace(/\n/g, '<br>');
         } else throw new Error(data.message);
     } catch (error) {
@@ -375,30 +379,24 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
         this.disabled = false;
     }
 });
-// ============================================================================
-// 🤖 POLARIS PROTOCOL: FRC 11319 ENGLISH DEMO WITH DRAG ANIMATION
-// ============================================================================
+// #endregion
 
+// #region [10] Polaris Protocol: Animation Core (北极星协议：动画核心引擎)
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// 1. 摄影师跟随引擎 (移动鼠标)
 async function moveCursorTo(selector, offsetX = 10, offsetY = 10) {
     const el = document.querySelector(selector);
-    if (!el) { console.warn('Element not found:', selector); return; }
-    
+    if (!el) return;
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     await wait(400);
-
     const rect = el.getBoundingClientRect();
     const cursor = document.getElementById('ghost-cursor');
-    // 设置过渡动画
     cursor.style.transition = 'all 0.8s ease-out';
     cursor.style.left = (rect.left + rect.width / 2 + offsetX) + 'px';
     cursor.style.top = (rect.top + rect.height / 2 + offsetY) + 'px';
     await wait(800); 
 }
 
-// 2. 机械键盘打字机引擎
 async function typeIn(selector, text, speed = 40) {
     const el = document.querySelector(selector);
     if (!el) return;
@@ -410,20 +408,15 @@ async function typeIn(selector, text, speed = 40) {
     }
 }
 
-// 🚀 3. 全新核心引擎：逼真的拖拽滑块动画
 async function dragSlider(selector, targetValue) {
     const slider = document.querySelector(selector);
     if (!slider) return;
-
-    // 获取滑块数据和位置
     const min = parseFloat(slider.min) || 0;
     const max = parseFloat(slider.max) || 5;
     const currentVal = parseFloat(slider.value) || 0;
     const rect = slider.getBoundingClientRect();
-
     const cursor = document.getElementById('ghost-cursor');
     
-    // 步骤 A: 移动到滑块当前的圆点位置
     slider.scrollIntoView({ behavior: 'smooth', block: 'center' });
     await wait(300);
     const currentPct = (currentVal - min) / (max - min);
@@ -435,19 +428,15 @@ async function dragSlider(selector, targetValue) {
     cursor.style.top = centerY + 'px';
     await wait(600); 
 
-    // 步骤 B: 模拟“按下鼠标” (缩小并变成深红色)
     cursor.style.transform = 'scale(0.7)';
     cursor.style.backgroundColor = '#8b0000'; 
     await wait(200);
 
-    // 步骤 C: 拖动到目标位置，同时动态更新数值！
     const targetPct = (targetValue - min) / (max - min);
     const endX = rect.left + (rect.width * targetPct);
-    
-    cursor.style.transition = 'all 0.6s linear'; // 拖动时用线性速度更真实
+    cursor.style.transition = 'all 0.6s linear'; 
     cursor.style.left = endX + 'px';
     
-    // 配合鼠标移动，把数值分 10 步平滑加进去，让雷达图动起来
     const steps = 10;
     const stepTime = 600 / steps;
     const valStep = (targetValue - currentVal) / steps;
@@ -458,22 +447,18 @@ async function dragSlider(selector, targetValue) {
         slider.dispatchEvent(new Event('input', { bubbles: true }));
     }
     
-    // 确保最终值准确
     slider.value = targetValue;
     slider.dispatchEvent(new Event('input', { bubbles: true }));
     slider.dispatchEvent(new Event('change', { bubbles: true }));
 
-    // 步骤 D: 模拟“松开鼠标”
     cursor.style.transform = 'scale(1)';
     cursor.style.backgroundColor = 'var(--brut-red, #ff0000)';
     await wait(300);
 }
+// #endregion
 
-// ---------------- 🎬 FRC 11319 英文主线剧情 ----------------
+// #region [11] Polaris Protocol: Demo Scenario (北极星协议：演示剧本)
 async function runTutorialDemo() {
-    console.log(">> 🎬 SYSTEM: Polaris Demo Sequence Initiated...");
-
-    // 1. 生成幽灵鼠标
     let cursor = document.getElementById('ghost-cursor');
     if (!cursor) {
         cursor = document.createElement('div');
@@ -482,8 +467,6 @@ async function runTutorialDemo() {
     }
 
     await wait(1000);
-
-    // 🌟 导演加戏：先精准点击左侧栏菜单，确保页面切到了表单页！
     await moveCursorTo('#nav-publish'); 
     const navBtn = document.querySelector('#nav-publish');
     if (navBtn) {
@@ -494,18 +477,14 @@ async function runTutorialDemo() {
     }
     await wait(500);
 
-    // 2. Task Title & Draft Description
     await moveCursorTo('#task-title');
     await typeIn('#task-title', 'FRC Regional: Pit Crew & Scouting', 50);
-    
     await moveCursorTo('#task-desc');
     await typeIn('#task-desc', 'Help setup the pit, organize tools, and scout other teams for Polaris 11319.', 40);
 
-    // 2. Summon AI Magic (Smoke and Mirrors)
     const aiBtnSelector = '#btn-ai-refine';
     await moveCursorTo(aiBtnSelector);
     const aiBtn = document.querySelector(aiBtnSelector);
-    
     aiBtn.classList.add('tut-click-blink');
     await wait(400);
     aiBtn.classList.remove('tut-click-blink');
@@ -513,10 +492,8 @@ async function runTutorialDemo() {
     const originalBtnHtml = aiBtn.innerHTML;
     aiBtn.innerHTML = '<i class="bi bi-cpu"></i> OPTIMIZING...';
     aiBtn.disabled = true;
+    await wait(2500); 
 
-    await wait(2500); // Fake AI processing time
-
-    // ✨ The epic FRC themed AI response
     const mockAIResponse = `### 🤖 FRC 11319 Polaris: Pit & Scouting Crew
 
 **MISSION OBJECTIVE**:
@@ -534,51 +511,39 @@ Join Team Polaris 11319 at the upcoming FIRST Robotics Competition Regional! We 
     const descInput = document.querySelector('#task-desc');
     descInput.value = mockAIResponse;
     descInput.dispatchEvent(new Event('input', { bubbles: true }));
-    
     aiBtn.innerHTML = originalBtnHtml;
     aiBtn.disabled = false;
     if (typeof Toast !== 'undefined') Toast.fire({ icon: 'success', title: 'AI ENHANCED!' });
-    
     await wait(1500);
 
-    // 3. Set Time & Hours
     document.querySelector('#task-start').value = "2026-04-15T08:00";
     document.querySelector('#task-end').value = "2026-04-15T16:00";
     await moveCursorTo('#task-time');
     await typeIn('#task-time', '8', 100);
     document.querySelector('#task-time').dispatchEvent(new Event('input')); 
 
-    // 4. 🌟 THE HIGHLIGHT: Dragging Radar Dimensions
     await wait(500);
-    
-    // Watch the ghost mouse physically drag the sliders for FRC skills!
-    await dragSlider('#dim1', 5); // EXEC: High execution needed for pit repairs
-    await dragSlider('#dim2', 5); // TEAM: Essential for scouting data sync
-    await dragSlider('#dim3', 4); // COMM: Relaying info to drive coach
-    await dragSlider('#dim4', 3); // LEAD: Leading sub-teams
-    await dragSlider('#dim5', 4); // INNO: On-the-fly robot fixes
-    
+    await dragSlider('#dim1', 5); 
+    await dragSlider('#dim2', 5); 
+    await dragSlider('#dim3', 4); 
+    await dragSlider('#dim4', 3); 
+    await dragSlider('#dim5', 4); 
     await wait(800);
 
-    // 5. Set Capacity & Deploy
     await moveCursorTo('#task-capacity');
-    await typeIn('#task-capacity', '6', 100); // 6 students needed
-
+    await typeIn('#task-capacity', '6', 100); 
     await moveCursorTo('#btn-admin-publish');
     const deployBtn = document.querySelector('#btn-admin-publish');
     deployBtn.classList.add('tut-click-blink');
     await wait(500);
-    
-    // 🚨 We trigger the real deploy button so it saves to your database!
     deployBtn.click(); 
     deployBtn.classList.remove('tut-click-blink');
 
     await wait(2000);
     cursor.remove();
-    console.log(">> 🎬 SYSTEM: Demo Completed Successfully.");
 }
 
-// Auto-start after 3 seconds
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(runTutorialDemo, 3000); 
 });
+// #endregion

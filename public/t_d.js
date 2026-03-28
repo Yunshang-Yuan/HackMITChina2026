@@ -1,17 +1,16 @@
-// ================= TEACHER 业务逻辑 (已全量瘦身) =================
+// #region [01] Authorization & Initialization (权限校验与初始化)
 let globalStudentRecordsCache = [];
 
-// 1. 权限校验
 if (!userEmail || userRole !== 'teacher') {
     Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '无教师权限。' }).then(() => { window.location.href = "login.html"; });
 } 
 
-// 2. 初始化全局雷达图 (依赖 global.ui.js 提供的方法)
 if (typeof initGlobalRadarChart === 'function') {
     initGlobalRadarChart('radarChart');
 }
+// #endregion
 
-// ================= 导航切换逻辑 =================
+// #region [02] Navigation & Tab Switching (导航与页面切换逻辑)
 const navIds = ['nav-publish', 'nav-manage', 'nav-audit'];
 const secIds = ['section-publish', 'section-manage', 'section-audit'];
 const titles = ["TERMINAL // 发布新任务", "TERMINAL // 任务进度管理", "TERMINAL // 考核与结算"];
@@ -34,8 +33,9 @@ function switchTab(activeIndex) {
 document.getElementById('nav-publish').onclick = (e) => { e.preventDefault(); switchTab(0); };
 document.getElementById('nav-manage').onclick = (e) => { e.preventDefault(); switchTab(1); loadMyTasks(); };
 document.getElementById('nav-audit').onclick = (e) => { e.preventDefault(); switchTab(2); loadAuditRecords(); };
+// #endregion
 
-// ================= 核心业务 API =================
+// #region [03] Task Deployment Logic (任务发布核心逻辑)
 document.getElementById('btn-submit-task').addEventListener('click', async (e) => {
     e.preventDefault();
     const startDate = document.getElementById('task-start').value;
@@ -56,7 +56,6 @@ document.getElementById('btn-submit-task').addEventListener('click', async (e) =
         if (data.success) {
             Swal.fire({ ...brutSwalObj, title: 'DEPLOYED', text: data.message, icon: 'success' });
             document.getElementById('task-publish-form').reset();
-            // 访问 global.ui.js 中的全局雷达图实例重置数据
             if(typeof globalRadarChart !== 'undefined' && globalRadarChart) { 
                 globalRadarChart.data.datasets[0].data = [0,0,0,0,0]; 
                 globalRadarChart.update(); 
@@ -66,7 +65,9 @@ document.getElementById('btn-submit-task').addEventListener('click', async (e) =
         } else Swal.fire({ ...brutSwalObj, title: 'FAILED', text: data.message, icon: 'error' });
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION FAILED.', icon: 'error' }); }
 });
+// #endregion
 
+// #region [04] Task Inventory Management (教师任务清单管理)
 async function loadMyTasks() {
     const tbody = document.getElementById('my-tasks-body');
     try {
@@ -90,7 +91,9 @@ async function loadMyTasks() {
         } else tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 font-monospace fw-bold text-muted">NO TASKS DEPLOYED.</td></tr>';
     } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
 }
+// #endregion
 
+// #region [05] Student Record Auditing (学生记录审核列表)
 async function loadAuditRecords() {
     const tbody = document.getElementById('audit-records-body');
     try {
@@ -131,7 +134,9 @@ async function loadAuditRecords() {
         } else tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 font-monospace fw-bold text-muted">NO RECORDS FOUND.</td></tr>';
     } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger font-monospace fw-bold">FETCH FAILED.</td></tr>'; }
 }
+// #endregion
 
+// #region [06] Manual Adjustments & Flagging (手动核减与异常标记)
 window.deductTime = async function(recordId) {
     const { value: hours } = await Swal.fire({ ...brutSwalObj, title: 'DEDUCT HOURS', input: 'number', inputAttributes: { step: 0.5 }, showCancelButton: true });
     if (!hours || hours <= 0) return;
@@ -146,6 +151,19 @@ window.deductTime = async function(recordId) {
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
 
+window.markAnomaly = async function(recordId) {
+    const res = await Swal.fire({ ...brutSwalObj, title: 'FLAG AS ANOMALY?', icon: 'warning', showCancelButton: true });
+    if(!res.isConfirmed) return;
+    const { value: reason } = await Swal.fire({ ...brutSwalObj, title: 'REASON', input: 'text', showCancelButton: true });
+    try {
+        const response = await fetch(`${API_BASE_URL}/teacher/mark-anomaly`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, reason: reason||"N/A" }) });
+        const data = await response.json();
+        if (data.success) { Toast.fire({ icon: 'success', title: 'FLAGGED.' }); loadAuditRecords(); }
+    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
+};
+// #endregion
+
+// #region [07] Reflection Review & Bonus System (心得评估与奖金发放)
 window.openReviewModal = function(recordId) {
     const record = globalStudentRecordsCache.find(r => r._id === recordId);
     if (!record) return;
@@ -154,16 +172,12 @@ window.openReviewModal = function(recordId) {
     document.getElementById('modal-bonus-input').value = 0;
     document.getElementById('modal-current-record-id').value = recordId;
 
-    // 👇 ========= 新增的这两步 ========= 👇
-    // 1. 把任务名称和时长绑到 AI 打分按钮的 dataset 上
     const aiBtn = document.getElementById('btn-ai-evaluate');
     if (aiBtn) {
         aiBtn.dataset.taskTitle = record.taskId.title;
         aiBtn.dataset.taskHours = record.taskId.duration;
     }
-    // 2. 每次打开新弹窗时，把上一次的 AI 评估结果框隐藏掉
     document.getElementById('ai-eval-result-box').style.display = 'none';
-    // 👆 =============================== 👆
 
     new bootstrap.Modal(document.getElementById('reviewModal')).show();
 };
@@ -181,15 +195,12 @@ document.getElementById('btn-submit-review').addEventListener('click', async () 
         } else Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 });
+// #endregion
 
-// ================= 新增：AI 辅助功能 =================
-
-// 1. AI 润色任务描述
+// #region [08] AI Enhancement Services (AI 增强辅助功能)
 document.getElementById('btn-ai-refine')?.addEventListener('click', async function() {
     const descInput = document.getElementById('task-desc');
     const originalText = descInput.value.trim();
-    
-    // 复用你已经配好的 SweetAlert (Toast)
     if (!originalText) return Toast.fire({ icon: 'warning', title: '请输入基础描述！' });
 
     const originalBtnHtml = this.innerHTML;
@@ -203,7 +214,6 @@ document.getElementById('btn-ai-refine')?.addEventListener('click', async functi
             body: JSON.stringify({ description: originalText })
         });
         const data = await response.json();
-        
         if (data.success) {
             descInput.value = data.response;
             Toast.fire({ icon: 'success', title: '描述已扩写！' });
@@ -216,13 +226,10 @@ document.getElementById('btn-ai-refine')?.addEventListener('click', async functi
     }
 });
 
-// 2. AI 评估志愿心得
 document.getElementById('btn-ai-evaluate')?.addEventListener('click', async function() {
     const reflectionText = document.getElementById('modal-reflection-text').textContent;
-    // 从按钮自定义属性上读取上下文（下文会教你怎么绑上去）
     const taskTitle = this.dataset.taskTitle || '未知任务';
     const taskHours = this.dataset.taskHours || '未知时长';
-    
     const resultBox = document.getElementById('ai-eval-result-box');
     const resultContent = document.getElementById('ai-eval-content');
 
@@ -231,8 +238,6 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
     const originalBtnHtml = this.innerHTML;
     this.innerHTML = '<i class="bi bi-cpu-fill"></i> 分析中...';
     this.disabled = true;
-    
-    // 显示评估框，呈现极客风的 Loading 动画
     resultBox.style.display = 'block';
     resultContent.innerHTML = '<span class="text-danger fw-bold blinking-text">CONNECTING TO AI CORE...</span>';
 
@@ -243,10 +248,7 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
             body: JSON.stringify({ reflection: reflectionText, taskTitle, hours: taskHours })
         });
         const data = await response.json();
-        
         if (data.success) {
-            // 注意：如果你把之前的 parseMarkdown 放到 global.ui.js 里了，这里就可以直接调用。
-            // 否则这里可以用 data.response.replace(/\n/g, '<br>') 做一个简单的换行回退处理。
             resultContent.innerHTML = typeof parseMarkdown === 'function' ? parseMarkdown(data.response) : data.response.replace(/\n/g, '<br>');
         } else throw new Error(data.message);
     } catch (error) {
@@ -256,14 +258,4 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
         this.disabled = false;
     }
 });
-
-window.markAnomaly = async function(recordId) {
-    const res = await Swal.fire({ ...brutSwalObj, title: 'FLAG AS ANOMALY?', icon: 'warning', showCancelButton: true });
-    if(!res.isConfirmed) return;
-    const { value: reason } = await Swal.fire({ ...brutSwalObj, title: 'REASON', input: 'text', showCancelButton: true });
-    try {
-        const response = await fetch(`${API_BASE_URL}/teacher/mark-anomaly`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recordId, reason: reason||"N/A" }) });
-        const data = await response.json();
-        if (data.success) { Toast.fire({ icon: 'success', title: 'FLAGGED.' }); loadAuditRecords(); }
-    } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
-};
+// #endregion

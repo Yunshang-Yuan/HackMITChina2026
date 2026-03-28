@@ -1,12 +1,8 @@
-/**
- * GLOBAL UI LOGIC (BRUTALIST SYSTEM)
- * Handles universal UI components, thematic toggles, identity injection, and shared widget instances.
- */
-
-//const API_BASE_URL = "http://106.14.147.100:3000/api";
+// #region [01] Base Configuration & Constants (基础配置与常量)
 const API_BASE_URL = "/api";
+// #endregion
 
-// --- 1. IDENTITY INJECTION ---
+// #region [02] Identity & Profile Injection (身份与档案注入)
 const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
 const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole');
 const realName = localStorage.getItem('realName') || sessionStorage.getItem('realName') || 'UNKNOWN';
@@ -18,8 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nameEl) nameEl.textContent = realName;
     if (idEl) idEl.textContent = studentId;
 });
+// #endregion
 
-// --- 2. GLOBAL ALERT & TOAST CONFIGURATIONS (Pure English, Full Sentences) ---
+// #region [03] UI Alert & Notification Setup (UI 弹窗与通知配置)
 const brutSwalObj = {
     customClass: { 
         popup: 'brut-modal', 
@@ -34,13 +31,14 @@ const Toast = Swal.mixin({
     position: 'top-end', 
     showConfirmButton: false, 
     timer: 3000, 
-    timerProgressBar: true, // Aligned with Student specs
+    timerProgressBar: true, 
     background: 'var(--brut-black)', 
     color: 'var(--brut-white)', 
     customClass: { popup: 'rounded-0 border border-white' }
 });
+// #endregion
 
-// --- 3. THEME TOGGLE (Dark Mode) ---
+// #region [04] Thematic Engine & Dark Mode (主题引擎与暗黑模式)
 const themeBtn = document.getElementById('btn-theme-toggle');
 if (themeBtn) {
     if (localStorage.getItem('sys-theme') === 'dark') {
@@ -54,14 +52,14 @@ if (themeBtn) {
         localStorage.setItem('sys-theme', isDark ? 'dark' : 'light');
         themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-stars-fill"></i>';
         
-        // Update radar chart theme globally if it exists on the page
         if (typeof updateRadarTheme === 'function') {
             updateRadarTheme(isDark);
         }
     });
 }
+// #endregion
 
-// --- 4. GLOBAL SYSTEM SETTINGS TRIGGER ---
+// #region [05] Session & System Controls (会话与系统控制)
 const settingsBtn = document.getElementById('btn-settings');
 if (settingsBtn) {
     settingsBtn.addEventListener('click', () => {
@@ -75,7 +73,6 @@ if (settingsBtn) {
     });
 }
 
-// --- 5. STANDARDIZED LOGOUT FLOW ---
 const logoutBtn = document.getElementById('btn-logout');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
@@ -85,8 +82,8 @@ if (logoutBtn) {
             text: 'Are you sure you want to terminate the current session and log out?',
             icon: 'warning', 
             showCancelButton: true,
-            confirmButtonText: 'OK',      // 强行指定按钮文字
-            cancelButtonText: 'Cancel'    // 强行指定按钮文字
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel'
         });
         if (res.isConfirmed) { 
             localStorage.clear(); 
@@ -94,8 +91,9 @@ if (logoutBtn) {
         }
     });
 }
+// #endregion
 
-// --- 6. UNIVERSAL RADAR CHART LOGIC (Admin & Teacher architecture) ---
+// #region [06] Data Visualization Hub (数据可视化中枢)
 let globalRadarChart;
 
 function initGlobalRadarChart(canvasId, initialData = [0, 0, 0, 0, 0]) {
@@ -146,13 +144,13 @@ function updateRadarTheme(isDark) {
     globalRadarChart.options.scales.r.grid.color = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
     
     if (globalRadarChart.data.datasets.length > 0) {
-        // Adjust point border color based on theme for better visibility
         globalRadarChart.data.datasets[0].pointBorderColor = lineColor;
     }
     globalRadarChart.update();
 }
+// #endregion
 
-// Bind radar sliders universally if they exist on the DOM
+// #region [07] Global Input Event Bindings (全局输入事件绑定)
 document.querySelectorAll('.dim-slider').forEach(slider => {
     slider.addEventListener('input', (e) => {
         const valDisplay = document.getElementById(`val-${e.target.id}`);
@@ -170,3 +168,4 @@ document.querySelectorAll('.dim-slider').forEach(slider => {
         }
     });
 });
+// #endregion

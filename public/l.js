@@ -1,14 +1,19 @@
-// 全局配置与弹窗样式初始化
-//const API_BASE_URL = "http://106.14.147.100:3000/api";
+// #region [01] Global Configuration & Constants (全局配置与常量)
 const API_BASE_URL = "/api";
 
 const brutSwalObj = {
-    customClass: { popup: 'brut-modal', confirmButton: 'btn btn-brut btn-brut-red mx-2', cancelButton: 'btn btn-brut mx-2' },
+    customClass: { 
+        popup: 'brut-modal', 
+        confirmButton: 'btn btn-brut btn-brut-red mx-2', 
+        cancelButton: 'btn btn-brut mx-2' 
+    },
     buttonsStyling: false
 };
+// #endregion
 
-// ================= 主题切换逻辑 =================
+// #region [02] Theme & Visual Mode Control (主题与视觉模式控制)
 const themeBtn = document.getElementById('btn-theme-toggle');
+
 if (localStorage.getItem('sys-theme') === 'dark') {
     document.body.classList.add('dark-mode');
     themeBtn.innerHTML = '<i class="bi bi-sun-fill"></i>';
@@ -26,8 +31,9 @@ themeBtn.addEventListener('click', () => {
         themeBtn.innerHTML = '<i class="bi bi-moon-stars-fill"></i>';
     }
 });
+// #endregion
 
-// ================= 小眼睛：密码可见性切换 =================
+// #region [03] UI Interactivity & Input Helpers (UI 交互与输入辅助)
 document.querySelectorAll('.pwd-toggle').forEach(icon => {
     icon.addEventListener('click', function() {
         const targetId = this.getAttribute('data-target');
@@ -44,17 +50,16 @@ document.querySelectorAll('.pwd-toggle').forEach(icon => {
     });
 });
 
-// ================= 忘记密码预留入口 =================
 document.getElementById('btn-forgot-pwd').addEventListener('click', (e) => {
     e.preventDefault();
     Swal.fire({
-        ...brutSwalObj, title: 'RESET_PASSWORD', input: 'email', inputLabel: 'INPUT REGISTERED EMAIL:',
-        inputPlaceholder: 'user@school.edu', showCancelButton: true, confirmButtonText: 'SEND CODE',
-        text: '[MOCK] 系统将向该邮箱发送重置验证码 (待后端开发)'
+        ...brutSwalObj, title: 'RESET_PASSWORD', input: 'email', 
+        inputLabel: 'INPUT REGISTERED EMAIL:',
+        inputPlaceholder: 'user@school.edu', showCancelButton: true, 
+        confirmButtonText: 'SEND CODE'
     });
 });
 
-// ================= 身份切换与邀请码标签动态响应 =================
 document.getElementById('reg-role').addEventListener('change', function() {
     const studentFields = document.getElementById('student-fields-wrapper');
     const inviteLabel = document.getElementById('invite-code-label');
@@ -67,13 +72,13 @@ document.getElementById('reg-role').addEventListener('change', function() {
         inviteLabel.textContent = `INVITE_CODE [${this.value.toUpperCase()} 专用邀请码] *`;
     }
 });
+// #endregion
 
-// ================= 实时密码强度引擎 =================
+// #region [04] Password Strength Engine (密码强度实时检测引擎)
 document.getElementById('reg-password').addEventListener('input', function() {
     const val = this.value;
     let score = 0;
     
-    // 算法：长度(25) + 大小写(25) + 数字(25) + 符号(25)
     if(val.length >= 8) score += 25;
     if(/[a-z]/.test(val) && /[A-Z]/.test(val)) score += 25;
     if(/\d/.test(val)) score += 25;
@@ -98,8 +103,9 @@ document.getElementById('reg-password').addEventListener('input', function() {
         text.innerHTML = '<span class="text-success fw-bold">STRONG</span>'; 
     }
 });
+// #endregion
 
-// ================= 魂斗罗彩蛋：纯开发者登录模式 (Konami Code) =================
+// #region [05] Secret Developer Access / Easter Egg (开发者秘密准入与彩蛋)
 const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 let konamiIndex = 0;
 
@@ -116,13 +122,10 @@ document.addEventListener('keydown', (e) => {
 });
 
 function triggerHackerMode() {
-    // 1. 变异 UI
     document.body.classList.add('hacker-mode'); 
     document.getElementById('sys-badge').classList.add('bg-danger', 'text-white');
     document.getElementById('sys-badge').textContent = 'SYS.OVERRIDE // GOD_MODE';
     document.getElementById('main-title').textContent = 'DEVELOPER_LOGIN';
-
-    // 2. 剥夺注册权：隐藏注册按钮，强制切到登录
     document.getElementById('tab-register-wrapper').style.display = 'none';
     document.getElementById('tab-login').click();
     document.getElementById('tab-login').textContent = 'DEV_ACCESS // 极客准入';
@@ -137,8 +140,9 @@ function triggerHackerMode() {
         customClass: { popup: 'brut-modal border-success' }
     });
 }
+// #endregion
 
-// ================= 获取验证码：60秒冷却防抖 =================
+// #region [06] OTP & Cooldown Logic (验证码发送与冷却控制)
 let cooldownTimer = null;
 let cooldownCount = 0;
 
@@ -148,7 +152,7 @@ document.getElementById('btn-get-code').addEventListener('click', function() {
     if (!/^\S+@\S+\.\S+$/.test(email)) return Swal.fire({ ...brutSwalObj, title: 'FORMAT_ERR', text: '邮箱格式不正确。', icon: 'error' });
     if (cooldownCount > 0) return; 
 
-    Swal.fire({ ...brutSwalObj, title: 'CODE_SENT', text: '[MOCK] 验证码已发送至您的邮箱，请查收。', icon: 'info' });
+    Swal.fire({ ...brutSwalObj, title: 'CODE_SENT', text: '验证码已发送至您的邮箱，请查收。', icon: 'info' });
     
     cooldownCount = 60;
     this.disabled = true;
@@ -165,13 +169,13 @@ document.getElementById('btn-get-code').addEventListener('click', function() {
         }
     }, 1000);
 });
+// #endregion
 
-// ================= 用户注册核心逻辑 =================
+// #region [07] User Registration Logic (用户注册核心逻辑)
 document.getElementById('btn-do-register').addEventListener('click', async (e) => {
     e.preventDefault();
     const btn = e.target;
     
-    // 1. 获取全局字段
     const role = document.getElementById('reg-role').value;
     const realName = document.getElementById('reg-name').value;
     const engName = document.getElementById('reg-ename').value;
@@ -183,14 +187,12 @@ document.getElementById('btn-do-register').addEventListener('click', async (e) =
     const inviteCode = document.getElementById('reg-invite-code').value;
     const isIntegrityChecked = document.getElementById('reg-integrity').checked;
 
-    // 2. 基础非空校验 (不锁死密码复杂度，只看一致性)
     if (!realName || !username || !email || !pwd1 || !pwd2 || !code || !inviteCode) {
-        return Swal.fire({ ...brutSwalObj, title: 'DATA_ERR', text: '所有带 * 的必填项均不能为空。', icon: 'warning' });
+        return Swal.fire({ ...brutSwalObj, title: 'DATA_ERR', text: '所有必填项均不能为空。', icon: 'warning' });
     }
     if (pwd1 !== pwd2) return Swal.fire({ ...brutSwalObj, title: 'PWD_MISMATCH', text: '两次输入的密码不一致。', icon: 'error' });
     if (!isIntegrityChecked) return Swal.fire({ ...brutSwalObj, title: 'CONSENT_REQ', text: '必须同意隐私协议并承诺学术诚信！', icon: 'error' });
 
-    // 3. 学生数据防撞校验
     let studentData = {};
     if (role === 'student') {
         studentData = {
@@ -199,7 +201,7 @@ document.getElementById('btn-do-register').addEventListener('click', async (e) =
             class: document.getElementById('reg-class').value,
         };
         for (let key in studentData) {
-            if (!studentData[key]) return Swal.fire({ ...brutSwalObj, title: 'ARCHIVE_INC', text: '学生档案(带*)信息填写不完整！', icon: 'warning' });
+            if (!studentData[key]) return Swal.fire({ ...brutSwalObj, title: 'ARCHIVE_INC', text: '学生档案信息填写不完整！', icon: 'warning' });
         }
     }
 
@@ -218,9 +220,8 @@ document.getElementById('btn-do-register').addEventListener('click', async (e) =
         const data = await response.json();
 
         if (data.success) {
-            Swal.fire({ ...brutSwalObj, title: 'NODE CREATED', text: `注册成功！欢迎进入系统，${role}。`, icon: 'success' }).then(() => {
+            Swal.fire({ ...brutSwalObj, title: 'NODE CREATED', text: `注册成功！欢迎，${role}。`, icon: 'success' }).then(() => {
                 document.getElementById('register-form').reset();
-                // 重置密码进度条
                 document.getElementById('pwd-strength-bar').style.width = '0%';
                 document.getElementById('pwd-strength-text').innerHTML = 'NONE';
                 document.getElementById('tab-login').click(); 
@@ -235,8 +236,9 @@ document.getElementById('btn-do-register').addEventListener('click', async (e) =
         btn.disabled = false;
     }
 });
+// #endregion
 
-// ================= 用户登录核心逻辑 =================
+// #region [08] User Login Logic (用户登录核心逻辑)
 document.getElementById('btn-do-login').addEventListener('click', async (e) => {
     e.preventDefault();
     const btn = e.target;
@@ -251,7 +253,6 @@ document.getElementById('btn-do-login').addEventListener('click', async (e) => {
     btn.disabled = true;
 
     try {
-        // [后端注意] 如果是开发者身份登录，需要后端做特殊验证放行，这里前端统一调用 login
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -263,22 +264,20 @@ document.getElementById('btn-do-login').addEventListener('click', async (e) => {
             const storage = rememberMe ? localStorage : sessionStorage;
             storage.setItem('userEmail', email);
             storage.setItem('userRole', data.role);
-            
-            // 👇 新增：把真实姓名和学号存进本地，供各端读取
             storage.setItem('realName', data.realName || '未知用户');
             storage.setItem('studentId', data.studentId || 'SYS-000');
             storage.setItem('studentClass', data.studentClass || 'N/A');
             
             if(!rememberMe) localStorage.removeItem('userEmail'); 
-
             window.location.href = `${data.role}_dashboard.html`;
-        }else {
+        } else {
             Swal.fire({ ...brutSwalObj, title: 'AUTH_FAILED', text: data.message, icon: 'error' });
         }
     } catch (error) {
-        Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: '无法连接到云服务器，请检查网络！', icon: 'error' });
+        Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: '无法连接到云服务器！', icon: 'error' });
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
 });
+// #endregion

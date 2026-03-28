@@ -1,16 +1,16 @@
-// ================= STUDENT 业务逻辑 (已全量瘦身) =================
+// #region [01] Authorization & Initialization (权限校验与初始化)
 let globalTasksCache = [];
 let studentDetailChart = null;
 
-// 1. 权限校验
 if (!userEmail || userRole !== 'student') {
     Swal.fire({ ...brutSwalObj, icon: 'error', title: 'ACCESS DENIED', text: '未授权的访问请求。' }).then(() => { window.location.href = "login.html"; });
 } else {
     loadUserProfile();
     loadTasks();
 }
+// #endregion
 
-// 补丁：处理弹窗内特有雷达图的暗黑模式 (全局 JS 无法接管这个局部的图表)
+// #region [02] Theme & UI Enhancements (主题切换与 UI 补丁)
 const themeToggleBtn = document.getElementById('btn-theme-toggle');
 if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
@@ -24,8 +24,9 @@ if (themeToggleBtn) {
         }
     });
 }
+// #endregion
 
-// ================= 导航切换逻辑 =================
+// #region [03] Navigation & Tab Routing (导航切换与路由逻辑)
 const studentNavIds = ['nav-hub', 'nav-my-tasks', 'nav-retro', 'nav-my-data'];
 const studentSecIds = ['section-hub', 'section-my-tasks', 'section-retro', 'section-my-data'];
 const studentTitles = ["TERMINAL // 任务大厅", "TERMINAL // 个人进程", "TERMINAL // 志愿补录", "TERMINAL // 我的数据"];
@@ -49,8 +50,9 @@ document.getElementById('nav-hub').addEventListener('click', (e) => { e.preventD
 document.getElementById('nav-my-tasks').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(1); loadMyRecords(); });
 document.getElementById('nav-retro').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(2); });
 document.getElementById('nav-my-data').addEventListener('click', (e) => { e.preventDefault(); switchStudentTab(3); loadUserProfile(); });
+// #endregion
 
-// ================= 核心业务 API =================
+// #region [04] User Profile & Statistics (个人档案与数据统计)
 async function loadUserProfile() {
     try {
         const response = await fetch(`${API_BASE_URL}/student/profile?email=${encodeURIComponent(userEmail)}`);
@@ -75,7 +77,9 @@ async function loadUserProfile() {
         }
     } catch (error) { console.error("FETCH ERROR:", error); }
 }
+// #endregion
 
+// #region [05] Task Discovery & List (任务发现与列表渲染)
 async function loadTasks() {
     const container = document.getElementById('task-list');
     try {
@@ -105,7 +109,9 @@ async function loadTasks() {
         });
     } catch (error) { container.innerHTML = '<p class="text-danger font-monospace fw-bold">SYSTEM ERROR: UNABLE TO FETCH DATA.</p>'; }
 }
+// #endregion
 
+// #region [06] Task Detail Modal & Radar Chart (任务详情弹窗与雷达图)
 window.openTaskModal = function(taskId) {
     const task = globalTasksCache.find(t => t._id === taskId);
     if (!task) return;
@@ -142,7 +148,9 @@ window.openTaskModal = function(taskId) {
     document.getElementById('btn-modal-accept').onclick = () => { bootstrap.Modal.getInstance(document.getElementById('taskDetailModal')).hide(); acceptTask(taskId); };
     new bootstrap.Modal(document.getElementById('taskDetailModal')).show();
 };
+// #endregion
 
+// #region [07] Task Acceptance & Flow Control (任务接取与流程控制)
 window.acceptTask = async function(taskId) {
     const result = await Swal.fire({
         ...brutSwalObj, title: 'CONFIRM EXECUTION', text: "确认执行此任务流？违约将导致系统降级处理。", icon: 'warning',
@@ -159,7 +167,9 @@ window.acceptTask = async function(taskId) {
         else { Swal.fire({ ...brutSwalObj, title: 'ERROR', text: data.message, icon: 'error' }); }
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'NETWORK CONNECTION LOST.', icon: 'error' }); }
 };
+// #endregion
 
+// #region [08] Personal Records & History (个人任务记录与历史)
 async function loadMyRecords() {
     const tbody = document.getElementById('my-records-body');
     try {
@@ -202,7 +212,9 @@ async function loadMyRecords() {
         } else { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 font-monospace fw-bold text-muted">NO LOGS FOUND.</td></tr>'; }
     } catch (error) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger fw-black font-monospace">DATA FETCH FAILED.</td></tr>'; }
 }
+// #endregion
 
+// #region [09] Reflection & Observation Logs (心得上传与观察记录)
 window.submitReflection = async function(recordId) {
     const { value: reflection, isConfirmed } = await Swal.fire({
         ...brutSwalObj, title: 'UPLOAD LOG_DATA', input: 'textarea', inputLabel: 'INPUT PROCESS OBSERVATIONS...', inputPlaceholder: 'MINIMUM 5 CHARACTERS REQ.',
@@ -219,15 +231,14 @@ window.submitReflection = async function(recordId) {
         else { Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' }); }
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION FAILED.', icon: 'error' }); }
 };
+// #endregion
 
-// ================= 志愿补录 =================
+// #region [10] Retroactive Volunteer Entry (志愿补录系统)
 function populateRetroProfile() {
     if(!document.getElementById('retro-email')) return;
     document.getElementById('retro-email').textContent = userEmail;
     document.getElementById('retro-name').textContent = realName;
     document.getElementById('retro-id').textContent = studentId;
-    
-    // 【已修复】直接从本地缓存获取 Class，防止未定义报错
     document.getElementById('retro-class').textContent = localStorage.getItem('studentClass') || sessionStorage.getItem('studentClass') || 'N/A';
 }
 
@@ -304,3 +315,4 @@ document.getElementById('btn-submit-retro-v2').addEventListener('click', async (
 });
 
 populateRetroProfile();
+// #endregion
