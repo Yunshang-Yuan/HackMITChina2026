@@ -375,3 +375,210 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
         this.disabled = false;
     }
 });
+// ============================================================================
+// 🤖 POLARIS PROTOCOL: FRC 11319 ENGLISH DEMO WITH DRAG ANIMATION
+// ============================================================================
+
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 1. 摄影师跟随引擎 (移动鼠标)
+async function moveCursorTo(selector, offsetX = 10, offsetY = 10) {
+    const el = document.querySelector(selector);
+    if (!el) { console.warn('Element not found:', selector); return; }
+    
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    await wait(400);
+
+    const rect = el.getBoundingClientRect();
+    const cursor = document.getElementById('ghost-cursor');
+    // 设置过渡动画
+    cursor.style.transition = 'all 0.8s ease-out';
+    cursor.style.left = (rect.left + rect.width / 2 + offsetX) + 'px';
+    cursor.style.top = (rect.top + rect.height / 2 + offsetY) + 'px';
+    await wait(800); 
+}
+
+// 2. 机械键盘打字机引擎
+async function typeIn(selector, text, speed = 40) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.value = '';
+    el.focus();
+    for (let i = 0; i < text.length; i++) {
+        el.value += text[i];
+        await wait(speed);
+    }
+}
+
+// 🚀 3. 全新核心引擎：逼真的拖拽滑块动画
+async function dragSlider(selector, targetValue) {
+    const slider = document.querySelector(selector);
+    if (!slider) return;
+
+    // 获取滑块数据和位置
+    const min = parseFloat(slider.min) || 0;
+    const max = parseFloat(slider.max) || 5;
+    const currentVal = parseFloat(slider.value) || 0;
+    const rect = slider.getBoundingClientRect();
+
+    const cursor = document.getElementById('ghost-cursor');
+    
+    // 步骤 A: 移动到滑块当前的圆点位置
+    slider.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    await wait(300);
+    const currentPct = (currentVal - min) / (max - min);
+    const startX = rect.left + (rect.width * currentPct);
+    const centerY = rect.top + rect.height / 2;
+    
+    cursor.style.transition = 'all 0.5s ease-out';
+    cursor.style.left = startX + 'px';
+    cursor.style.top = centerY + 'px';
+    await wait(600); 
+
+    // 步骤 B: 模拟“按下鼠标” (缩小并变成深红色)
+    cursor.style.transform = 'scale(0.7)';
+    cursor.style.backgroundColor = '#8b0000'; 
+    await wait(200);
+
+    // 步骤 C: 拖动到目标位置，同时动态更新数值！
+    const targetPct = (targetValue - min) / (max - min);
+    const endX = rect.left + (rect.width * targetPct);
+    
+    cursor.style.transition = 'all 0.6s linear'; // 拖动时用线性速度更真实
+    cursor.style.left = endX + 'px';
+    
+    // 配合鼠标移动，把数值分 10 步平滑加进去，让雷达图动起来
+    const steps = 10;
+    const stepTime = 600 / steps;
+    const valStep = (targetValue - currentVal) / steps;
+    
+    for(let i = 1; i <= steps; i++) {
+        await wait(stepTime);
+        slider.value = currentVal + (valStep * i);
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    // 确保最终值准确
+    slider.value = targetValue;
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    slider.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // 步骤 D: 模拟“松开鼠标”
+    cursor.style.transform = 'scale(1)';
+    cursor.style.backgroundColor = 'var(--brut-red, #ff0000)';
+    await wait(300);
+}
+
+// ---------------- 🎬 FRC 11319 英文主线剧情 ----------------
+async function runTutorialDemo() {
+    console.log(">> 🎬 SYSTEM: Polaris Demo Sequence Initiated...");
+
+    // 1. 生成幽灵鼠标
+    let cursor = document.getElementById('ghost-cursor');
+    if (!cursor) {
+        cursor = document.createElement('div');
+        cursor.id = 'ghost-cursor';
+        document.body.appendChild(cursor);
+    }
+
+    await wait(1000);
+
+    // 🌟 导演加戏：先精准点击左侧栏菜单，确保页面切到了表单页！
+    await moveCursorTo('#nav-publish'); 
+    const navBtn = document.querySelector('#nav-publish');
+    if (navBtn) {
+        navBtn.classList.add('tut-click-blink');
+        await wait(300);
+        navBtn.click(); 
+        navBtn.classList.remove('tut-click-blink');
+    }
+    await wait(500);
+
+    // 2. Task Title & Draft Description
+    await moveCursorTo('#task-title');
+    await typeIn('#task-title', 'FRC Regional: Pit Crew & Scouting', 50);
+    
+    await moveCursorTo('#task-desc');
+    await typeIn('#task-desc', 'Help setup the pit, organize tools, and scout other teams for Polaris 11319.', 40);
+
+    // 2. Summon AI Magic (Smoke and Mirrors)
+    const aiBtnSelector = '#btn-ai-refine';
+    await moveCursorTo(aiBtnSelector);
+    const aiBtn = document.querySelector(aiBtnSelector);
+    
+    aiBtn.classList.add('tut-click-blink');
+    await wait(400);
+    aiBtn.classList.remove('tut-click-blink');
+
+    const originalBtnHtml = aiBtn.innerHTML;
+    aiBtn.innerHTML = '<i class="bi bi-cpu"></i> OPTIMIZING...';
+    aiBtn.disabled = true;
+
+    await wait(2500); // Fake AI processing time
+
+    // ✨ The epic FRC themed AI response
+    const mockAIResponse = `### 🤖 FRC 11319 Polaris: Pit & Scouting Crew
+
+**MISSION OBJECTIVE**:
+Join Team Polaris 11319 at the upcoming FIRST Robotics Competition Regional! We need dedicated volunteers to maintain the pit area and gather crucial match data.
+
+**CORE RESPONSIBILITIES**:
+1. **Pit Operations**: Organize tools, manage battery charging stations, and assist the drive team with rapid robot repairs.
+2. **Match Scouting**: Observe assigned teams, record teleop scoring metrics, and input data into the Polaris App.
+3. **Strategy Support**: Deliver scouting reports to the drive coach before alliance selection.
+
+**REQUIREMENTS**:
+- Safety glasses are MANDATORY in the pit area.
+- Gracious Professionalism must be demonstrated at all times!`;
+
+    const descInput = document.querySelector('#task-desc');
+    descInput.value = mockAIResponse;
+    descInput.dispatchEvent(new Event('input', { bubbles: true }));
+    
+    aiBtn.innerHTML = originalBtnHtml;
+    aiBtn.disabled = false;
+    if (typeof Toast !== 'undefined') Toast.fire({ icon: 'success', title: 'AI ENHANCED!' });
+    
+    await wait(1500);
+
+    // 3. Set Time & Hours
+    document.querySelector('#task-start').value = "2026-04-15T08:00";
+    document.querySelector('#task-end').value = "2026-04-15T16:00";
+    await moveCursorTo('#task-time');
+    await typeIn('#task-time', '8', 100);
+    document.querySelector('#task-time').dispatchEvent(new Event('input')); 
+
+    // 4. 🌟 THE HIGHLIGHT: Dragging Radar Dimensions
+    await wait(500);
+    
+    // Watch the ghost mouse physically drag the sliders for FRC skills!
+    await dragSlider('#dim1', 5); // EXEC: High execution needed for pit repairs
+    await dragSlider('#dim2', 5); // TEAM: Essential for scouting data sync
+    await dragSlider('#dim3', 4); // COMM: Relaying info to drive coach
+    await dragSlider('#dim4', 3); // LEAD: Leading sub-teams
+    await dragSlider('#dim5', 4); // INNO: On-the-fly robot fixes
+    
+    await wait(800);
+
+    // 5. Set Capacity & Deploy
+    await moveCursorTo('#task-capacity');
+    await typeIn('#task-capacity', '6', 100); // 6 students needed
+
+    await moveCursorTo('#btn-admin-publish');
+    const deployBtn = document.querySelector('#btn-admin-publish');
+    deployBtn.classList.add('tut-click-blink');
+    await wait(500);
+    
+    // 🚨 We trigger the real deploy button so it saves to your database!
+    deployBtn.click(); 
+    deployBtn.classList.remove('tut-click-blink');
+
+    await wait(2000);
+    cursor.remove();
+    console.log(">> 🎬 SYSTEM: Demo Completed Successfully.");
+}
+
+// Auto-start after 3 seconds
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(runTutorialDemo, 3000); 
+});

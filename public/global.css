@@ -1,3 +1,32 @@
+/* ================= 幽灵模式道具 (新手教程专用) ================= */
+
+/* 1. 定义红方块的“外貌” */
+#ghost-cursor {
+    width: 25px;            /* 方块的宽 */
+    height: 25px;           /* 方块的高 */
+    background-color: #ff0000; /* 鲜艳的红色，作为测试 */
+    border: 3px solid #000;  /* 粗黑边框，配合你的粗野主义风格 */
+    box-shadow: 5px 5px 0 #000; /* 标志性的粗野主义阴影 */
+    
+    position: fixed;        /* 关键：让它固定在屏幕最上层 */
+    top: 0;                 /* 初始位置：左上角 */
+    left: 0;
+    z-index: 99999;         /* 关键：确保它压在所有元素上面 */
+    
+    pointer-events: none;   /* 关键：这只是个虚影，不能阻挡用户真实的点击 */
+    
+    /* 2. 定义红方块的“移动规则” */
+    /* 当我们在 JS 里改它的位置时，CSS 会让它在 0.8 秒内平滑地“滑”过去 */
+    transition: all 0.8s ease-out; 
+}
+
+/* 一个闪烁的红色高亮框，用于模拟点击时的视觉反馈 */
+.tut-click-blink {
+    animation: brutBlinkRed 0.4s ease-in-out 2;
+}
+@keyframes brutBlinkRed {
+    50% { border-color: #ff0000; border-width: 5px; }
+}
 /* ==========================================================================
    GLOBAL UI STYLESHEET (BRUTALIST DESIGN SYSTEM)
    ========================================================================== */
