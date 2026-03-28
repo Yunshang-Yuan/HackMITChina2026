@@ -1,5 +1,6 @@
 // 全局配置与弹窗样式初始化
-const API_BASE_URL = "http://106.14.147.100:3000/api";
+//const API_BASE_URL = "http://106.14.147.100:3000/api";
+const API_BASE_URL = "/api";
 
 const brutSwalObj = {
     customClass: { popup: 'brut-modal', confirmButton: 'btn btn-brut btn-brut-red mx-2', cancelButton: 'btn btn-brut mx-2' },

@@ -1,5 +1,6 @@
 // ================= 全局配置与身份缓存提取 =================
-const API_BASE_URL = "http://106.14.147.100:3000/api";
+//const API_BASE_URL = "http://106.14.147.100:3000/api";
+const API_BASE_URL = "/api";
 
 // 提取我们在登录页存入的本地数据
 const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
