@@ -267,3 +267,77 @@ window.markAnomaly = async function(recordId) {
         if (data.success) { Toast.fire({ icon: 'success', title: 'FLAGGED.' }); loadAuditRecords(); }
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
 };
+// ============================================================================
+// 🤖 POLARIS PROTOCOL: 全自动新手指引脚本 (应急测试版)
+// ============================================================================
+
+// 辅助工具：让脚本“休息”一段时间 (毫秒)
+// 这就像剧本里的“（停顿 2 秒）”
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// ================= 主自动化流程 =================
+// 加上 async，我们才能在里面用 await 也就是“等待”指令
+async function runTutorialDemo() {
+    console.log(">> 🎬 幽灵模式：演示剧本启动...");
+
+    // 道具 1：找到你 CSS 里定义好的那个红方块 (现在它在 0,0)
+    // 如果它还没加载到 HTML 里，我们手动创建一个
+    let cursor = document.getElementById('ghost-cursor');
+    if (!cursor) {
+        cursor = document.createElement('div');
+        cursor.id = 'ghost-cursor';
+        document.body.appendChild(cursor);
+    }
+
+    // --- 剧情开始 ---
+
+    // 剧情 A: 脚本启动，先停顿 1.5 秒，给用户一个心理准备
+    await wait(1500);
+
+    // 剧情 B: 移动到 AI 助手气泡
+    // 1. 找到你要点击的那个 AI 按钮（这里假设它的 ID 是 #chat-toggle）
+    const aiButton = document.querySelector('#chat-toggle'); 
+    
+    if (aiButton) {
+        // 2. 计算这个按钮在屏幕上的精确位置
+        const rect = aiButton.getBoundingClientRect();
+        
+        // 3. 命令红方块：飞过去！(飞到按钮的中心点)
+        // 这一步会触发 CSS 的 transition，产生滑动的动画效果
+        cursor.style.left = (rect.left + rect.width / 2 - 12) + 'px'; 
+        cursor.style.top = (rect.top + rect.height / 2 - 12) + 'px';
+        
+        // 4. “（等待 1 秒）”，等待方块滑行到位
+        await wait(1000);
+        
+        // 5. 模拟高亮反馈 (闪烁两下)
+        aiButton.classList.add('tut-click-blink');
+        await wait(600); 
+
+        // 剧情 C: 真实点击！
+        // 这一步会真实地触发你之前写的点击事件，打开 AI 对话框
+        aiButton.click(); 
+        console.log(">> 🤖 幽灵鼠标：已真实点击 AI 助手气泡。");
+        
+        // 清理高亮样式
+        aiButton.classList.remove('tut-click-blink');
+    } else {
+        console.error(">> ❌ 报错：找不到 ID 为 #chat-toggle 的 AI 按钮，剧情无法推进。");
+    }
+
+    // --- 后续剧情预留位置 ---
+    // 你可以在这里继续加 wait() 和 moveCursorTo() 来演示 Hub、数据中心等。
+
+    // 演示结束：2 秒后抹除幽灵鼠标
+    await wait(2000);
+    cursor.remove();
+    console.log(">> 🎬 幽灵模式：演示剧本结束。");
+}
+
+// ================= 全自动启动器 =================
+// ⚠️ 测试用：网页加载完成后，自动运行演示
+// 如果你想手动启动，就在控制台里输入 runTutorialDemo()
+document.addEventListener('DOMContentLoaded', () => {
+    // 先停顿 3 秒，防止跟页面初始化逻辑冲突
+    setTimeout(runTutorialDemo, 3000); 
+});
