@@ -8,15 +8,17 @@
     --brut-black: #0a0a0a;
     --brut-white: #ffffff;
     --brut-red: #e62117;
-    --brut-border: 2px solid var(--brut-black);
+    --brut-line: #0a0a0a; /* 浅色模式下，线条颜色等于黑色 */
+    --brut-border: 2px solid var(--brut-line);
     --font-mono: 'Courier New', Courier, monospace;
 }
 
 body.dark-mode {
-    --brut-bg: #202020;
-    --brut-black: #d1d1ca;
-    --brut-white: #3d3d3d;
+    --brut-bg: #3d3d3d;
+    --brut-black: #d1d1ca; /* 深色模式文字颜色 */
+    --brut-white: #202020;
     --brut-red: #ff473e;
+    --brut-line: #d1d1ca; /* 核心修改：深色模式线条颜色改为目标灰色 */
 }
 
 /* --- 2. DARK MODE BOOTSTRAP OVERRIDES --- */
@@ -25,10 +27,21 @@ body.dark-mode .bg-white { background-color: var(--brut-white) !important; color
 body.dark-mode .text-dark { color: var(--brut-black) !important; }
 body.dark-mode .bg-dark { background-color: var(--brut-black) !important; color: var(--brut-white) !important; }
 body.dark-mode .text-muted { color: #b6b6b6 !important; }
+
+/* 重点修复：让所有边框类在深色模式下强制使用 #b6b6b6 */
 body.dark-mode .border, 
 body.dark-mode .border-top, 
 body.dark-mode .border-end, 
-body.dark-mode .border-bottom { border-color: var(--brut-black) !important; }
+body.dark-mode .border-bottom,
+body.dark-mode .border-dark,
+body.dark-mode .sidebar,
+body.dark-mode .brut-card,
+body.dark-mode .brut-table,
+body.dark-mode .brut-table td,
+body.dark-mode .sys-logo,
+body.dark-mode .nav-pills .nav-link { 
+    border-color: var(--brut-line) !important; 
+}
 
 /* --- 3. BASE & RESET --- */
 body {
