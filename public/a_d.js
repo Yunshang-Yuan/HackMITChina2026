@@ -377,29 +377,30 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
 });
 
 // ============================================================================
-// 🤖 POLARIS PROTOCOL: 官方任务发布全自动演示脚本 (带智能滚动与精准点击)
+// 🤖 POLARIS PROTOCOL: FRC 11319 ENGLISH DEMO WITH DRAG ANIMATION
 // ============================================================================
 
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// 🚀 升级版：自带“摄影师跟随”的移动引擎
+// 1. 摄影师跟随引擎 (移动鼠标)
 async function moveCursorTo(selector, offsetX = 10, offsetY = 10) {
     const el = document.querySelector(selector);
-    if (!el) { console.warn('找不到元素:', selector); return; }
+    if (!el) { console.warn('Element not found:', selector); return; }
     
-    // 🌟 核心修复 1：在移动鼠标前，先让页面平滑滚动，把元素移到屏幕中央
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    await wait(400); // 等待页面滚动平稳，否则鼠标坐标会算错
+    await wait(400);
 
     const rect = el.getBoundingClientRect();
     const cursor = document.getElementById('ghost-cursor');
+    // 设置过渡动画
+    cursor.style.transition = 'all 0.8s ease-out';
     cursor.style.left = (rect.left + rect.width / 2 + offsetX) + 'px';
     cursor.style.top = (rect.top + rect.height / 2 + offsetY) + 'px';
-    await wait(800); // 等待 CSS 动画滑过去
+    await wait(800); 
 }
 
-// 打字机引擎
-async function typeIn(selector, text, speed = 50) {
+// 2. 机械键盘打字机引擎
+async function typeIn(selector, text, speed = 40) {
     const el = document.querySelector(selector);
     if (!el) return;
     el.value = '';
@@ -410,21 +411,69 @@ async function typeIn(selector, text, speed = 50) {
     }
 }
 
-// 拖拽滑块并触发雷达图更新的引擎
-async function setSliderValue(selector, value) {
+// 🚀 3. 全新核心引擎：逼真的拖拽滑块动画
+async function dragSlider(selector, targetValue) {
     const slider = document.querySelector(selector);
     if (!slider) return;
-    slider.value = value;
-    slider.dispatchEvent(new Event('input', { bubbles: true })); 
+
+    // 获取滑块数据和位置
+    const min = parseFloat(slider.min) || 0;
+    const max = parseFloat(slider.max) || 5;
+    const currentVal = parseFloat(slider.value) || 0;
+    const rect = slider.getBoundingClientRect();
+
+    const cursor = document.getElementById('ghost-cursor');
+    
+    // 步骤 A: 移动到滑块当前的圆点位置
+    slider.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    await wait(300);
+    const currentPct = (currentVal - min) / (max - min);
+    const startX = rect.left + (rect.width * currentPct);
+    const centerY = rect.top + rect.height / 2;
+    
+    cursor.style.transition = 'all 0.5s ease-out';
+    cursor.style.left = startX + 'px';
+    cursor.style.top = centerY + 'px';
+    await wait(600); 
+
+    // 步骤 B: 模拟“按下鼠标” (缩小并变成深红色)
+    cursor.style.transform = 'scale(0.7)';
+    cursor.style.backgroundColor = '#8b0000'; 
+    await wait(200);
+
+    // 步骤 C: 拖动到目标位置，同时动态更新数值！
+    const targetPct = (targetValue - min) / (max - min);
+    const endX = rect.left + (rect.width * targetPct);
+    
+    cursor.style.transition = 'all 0.6s linear'; // 拖动时用线性速度更真实
+    cursor.style.left = endX + 'px';
+    
+    // 配合鼠标移动，把数值分 10 步平滑加进去，让雷达图动起来
+    const steps = 10;
+    const stepTime = 600 / steps;
+    const valStep = (targetValue - currentVal) / steps;
+    
+    for(let i = 1; i <= steps; i++) {
+        await wait(stepTime);
+        slider.value = currentVal + (valStep * i);
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    // 确保最终值准确
+    slider.value = targetValue;
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
     slider.dispatchEvent(new Event('change', { bubbles: true }));
-    await wait(300); 
+
+    // 步骤 D: 模拟“松开鼠标”
+    cursor.style.transform = 'scale(1)';
+    cursor.style.backgroundColor = 'var(--brut-red, #ff0000)';
+    await wait(300);
 }
 
-// ---------------- 主线剧情开始 ----------------
+// ---------------- 🎬 FRC 11319 英文主线剧情 ----------------
 async function runTutorialDemo() {
-    console.log(">> 🎬 幽灵模式：演示剧本启动...");
+    console.log(">> 🎬 SYSTEM: Polaris Demo Sequence Initiated...");
 
-    // 1. 生成幽灵鼠标
     let cursor = document.getElementById('ghost-cursor');
     if (!cursor) {
         cursor = document.createElement('div');
@@ -434,107 +483,91 @@ async function runTutorialDemo() {
 
     await wait(1000);
 
-    // 2. 模拟点击左侧菜单
-    await moveCursorTo('#nav-publish'); 
-    // 🌟 核心修复 2：加上真实的点击事件！
-    document.querySelector('#nav-publish').classList.add('tut-click-blink');
-    await wait(300);
-    document.querySelector('#nav-publish').click(); 
-    document.querySelector('#nav-publish').classList.remove('tut-click-blink');
-    await wait(500);
-    
-    // 3. 填写标题和敷衍的描述 (视角会自动跟过去)
+    // 1. Task Title & Draft Description
     await moveCursorTo('#task-title');
-    await typeIn('#task-title', '校园开放日志愿引导', 80);
+    await typeIn('#task-title', 'FRC Regional: Pit Crew & Scouting', 50);
     
     await moveCursorTo('#task-desc');
-    await typeIn('#task-desc', '帮忙发传单，给新生带路，很简单的。', 80);
+    await typeIn('#task-desc', 'Help setup the pit, organize tools, and scout other teams for Polaris 11319.', 40);
 
-    // 4. 召唤 AI 扩写 (💯 零成本防翻车演示版)
+    // 2. Summon AI Magic (Smoke and Mirrors)
     const aiBtnSelector = '#btn-ai-refine';
     await moveCursorTo(aiBtnSelector);
     const aiBtn = document.querySelector(aiBtnSelector);
     
-    // 幽灵点击特效
     aiBtn.classList.add('tut-click-blink');
     await wait(400);
     aiBtn.classList.remove('tut-click-blink');
 
-    // 🚨 核心魔法：不调用 .click() 触发真实网络请求，而是我们自己接管 UI！
     const originalBtnHtml = aiBtn.innerHTML;
-    aiBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 润色中...';
+    aiBtn.innerHTML = '<i class="bi bi-cpu"></i> OPTIMIZING...';
     aiBtn.disabled = true;
 
-    // 悬停等待 AI 思考（假装在请求，其实是在省钱，时间缩短到 2.5 秒保证节奏紧凑）
-    await wait(2500); 
+    await wait(2500); // Fake AI processing time
 
-    // 准备一段极其华丽、排版完美的“假” AI 扩写结果
-    const mockAIResponse = `### 🌟 校园开放日：新生引导志愿服务
+    // ✨ The epic FRC themed AI response
+    const mockAIResponse = `### 🤖 FRC 11319 Polaris: Pit & Scouting Crew
 
-**任务目标**：
-协助学校顺利开展2026年度校园开放日，为新生及家长提供热情、准确的游览指引，展现 Polaris 11319 团队及我校学子的良好风采。
+**MISSION OBJECTIVE**:
+Join Team Polaris 11319 at the upcoming FIRST Robotics Competition Regional! We need dedicated volunteers to maintain the pit area and gather crucial match data.
 
-**具体工作**：
-1. **物资分发**：在校门迎宾处发放校园地图与活动宣传册。
-2. **路线指引**：驻守关键路口（如图书馆、体育馆），解答家长路线咨询。
-3. **机动协助**：协助主会场工作人员疏导人流，确保活动安全有序。
+**CORE RESPONSIBILITIES**:
+1. **Pit Operations**: Organize tools, manage battery charging stations, and assist the drive team with rapid robot repairs.
+2. **Match Scouting**: Observe assigned teams, record teleop scoring metrics, and input data into the Polaris App.
+3. **Strategy Support**: Deliver scouting reports to the drive coach before alliance selection.
 
-**注意事项**：
-- 请着标准志愿者服装，保持微笑，展现积极风貌。
-- 请提前15分钟到达指定点位进行签到与培训。`;
+**REQUIREMENTS**:
+- Safety glasses are MANDATORY in the pit area.
+- Gracious Professionalism must be demonstrated at all times!`;
 
-    // 像魔法一样瞬间填入文本框
     const descInput = document.querySelector('#task-desc');
     descInput.value = mockAIResponse;
-    // 派发 input 事件，确保如果有其他监听器能捕获到变化
     descInput.dispatchEvent(new Event('input', { bubbles: true }));
     
-    // 恢复按钮状态，并假装弹出一个成功的 Toast
     aiBtn.innerHTML = originalBtnHtml;
     aiBtn.disabled = false;
-    if (typeof Toast !== 'undefined') {
-        Toast.fire({ icon: 'success', title: '描述已扩写！' });
-    }
+    if (typeof Toast !== 'undefined') Toast.fire({ icon: 'success', title: 'AI ENHANCED!' });
     
-    await wait(1000); // 停顿一秒，让评审看清扩写后的震撼效果
+    await wait(1500);
 
-    // 5. 填写时间和时长 (此时页面会自动往下滑！)
-    document.querySelector('#task-start').value = "2026-05-01T08:00";
-    document.querySelector('#task-end').value = "2026-05-01T12:00";
+    // 3. Set Time & Hours
+    document.querySelector('#task-start').value = "2026-04-15T08:00";
+    document.querySelector('#task-end').value = "2026-04-15T16:00";
     await moveCursorTo('#task-time');
-    await typeIn('#task-time', '4', 100);
+    await typeIn('#task-time', '8', 100);
     document.querySelector('#task-time').dispatchEvent(new Event('input')); 
 
-    // 6. 炫技时间：雷达图能力校准 (页面继续平滑下滚，把雷达图居中)
-    await moveCursorTo('#dim1', -50, 0); 
+    // 4. 🌟 THE HIGHLIGHT: Dragging Radar Dimensions
     await wait(500);
     
-    await setSliderValue('#dim1', 4); 
-    await setSliderValue('#dim2', 3); 
-    await setSliderValue('#dim3', 5); 
-    await setSliderValue('#dim4', 2); 
-    await setSliderValue('#dim5', 3); 
-    await wait(1000);
+    // Watch the ghost mouse physically drag the sliders for FRC skills!
+    await dragSlider('#dim1', 5); // EXEC: High execution needed for pit repairs
+    await dragSlider('#dim2', 5); // TEAM: Essential for scouting data sync
+    await dragSlider('#dim3', 4); // COMM: Relaying info to drive coach
+    await dragSlider('#dim4', 3); // LEAD: Leading sub-teams
+    await dragSlider('#dim5', 4); // INNO: On-the-fly robot fixes
+    
+    await wait(800);
 
-    // 7. 填写招募人数
+    // 5. Set Capacity & Deploy
     await moveCursorTo('#task-capacity');
-    await typeIn('#task-capacity', '15', 100);
+    await typeIn('#task-capacity', '6', 100); // 6 students needed
 
-    // 8. 最终部署 (滑到最底部的按钮)
     await moveCursorTo('#btn-admin-publish');
     const deployBtn = document.querySelector('#btn-admin-publish');
     deployBtn.classList.add('tut-click-blink');
     await wait(500);
-    deployBtn.click(); // 触发真实提交！
+    
+    // 🚨 We trigger the real deploy button so it saves to your database!
+    deployBtn.click(); 
     deployBtn.classList.remove('tut-click-blink');
 
-    // 剧终散场
     await wait(2000);
     cursor.remove();
-    console.log(">> 🎬 演示完成！");
+    console.log(">> 🎬 SYSTEM: Demo Completed Successfully.");
 }
 
-// 网页加载后 3 秒自动开始
+// Auto-start after 3 seconds
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(runTutorialDemo, 3000); 
 });
