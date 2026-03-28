@@ -375,3 +375,123 @@ document.getElementById('btn-ai-evaluate')?.addEventListener('click', async func
         this.disabled = false;
     }
 });
+
+// ============================================================================
+// 🤖 POLARIS PROTOCOL: 官方任务发布全自动演示脚本
+// ============================================================================
+
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 移动鼠标的引擎
+async function moveCursorTo(selector, offsetX = 10, offsetY = 10) {
+    const el = document.querySelector(selector);
+    if (!el) { console.warn('找不到元素:', selector); return; }
+    const rect = el.getBoundingClientRect();
+    const cursor = document.getElementById('ghost-cursor');
+    cursor.style.left = (rect.left + rect.width / 2 + offsetX) + 'px';
+    cursor.style.top = (rect.top + rect.height / 2 + offsetY) + 'px';
+    await wait(800); // 等待 CSS 动画滑过去
+}
+
+// 打字机引擎
+async function typeIn(selector, text, speed = 50) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.value = '';
+    el.focus();
+    for (let i = 0; i < text.length; i++) {
+        el.value += text[i];
+        await wait(speed);
+    }
+}
+
+// 拖拽滑块并触发雷达图更新的引擎
+async function setSliderValue(selector, value) {
+    const slider = document.querySelector(selector);
+    if (!slider) return;
+    slider.value = value;
+    // ⚠️ 极其关键：必须派发 input 事件，你的图表和计算公式才会知道值变了！
+    slider.dispatchEvent(new Event('input', { bubbles: true })); 
+    slider.dispatchEvent(new Event('change', { bubbles: true }));
+    await wait(300); // 稍微停顿，感受拉动的过程
+}
+
+// ---------------- 主线剧情开始 ----------------
+async function runTutorialDemo() {
+    console.log(">> 🎬 幽灵模式：演示剧本启动...");
+
+    // 1. 生成幽灵鼠标
+    let cursor = document.getElementById('ghost-cursor');
+    if (!cursor) {
+        cursor = document.createElement('div');
+        cursor.id = 'ghost-cursor';
+        document.body.appendChild(cursor);
+    }
+
+    await wait(1000);
+
+    // 2. 模拟点击左侧菜单 (如果需要的话)
+    // await moveCursorTo('.nav-link.active'); 
+    
+    // 3. 填写标题和敷衍的描述
+    await moveCursorTo('#task-title');
+    await typeIn('#task-title', '校园开放日志愿引导', 80);
+    
+    await moveCursorTo('#task-desc');
+    await typeIn('#task-desc', '帮忙发传单，给新生带路，很简单的。', 80);
+
+    // 4. 召唤 AI 扩写
+    const aiBtnSelector = '#btn-ai-refine';
+    await moveCursorTo(aiBtnSelector);
+    const aiBtn = document.querySelector(aiBtnSelector);
+    aiBtn.classList.add('tut-click-blink');
+    await wait(400);
+    aiBtn.click(); // 真实点击！触发你的后端 DeepSeek 接口
+    aiBtn.classList.remove('tut-click-blink');
+
+    // ⚠️ 悬停等待 AI 思考（大概需要 3-5 秒，看你网络）
+    // 这个期间你的界面应该会显示“正在施展魔法...”，效果极佳
+    await wait(4500); 
+
+    // 5. 填写时间和时长
+    document.querySelector('#task-start').value = "2026-05-01T08:00";
+    document.querySelector('#task-end').value = "2026-05-01T12:00";
+    await moveCursorTo('#task-time');
+    await typeIn('#task-time', '4', 100);
+    document.querySelector('#task-time').dispatchEvent(new Event('input')); // 触发保底心币的重算
+
+    // 6. 炫技时间：雷达图能力校准
+    // 幽灵鼠标假装移到雷达图区域
+    await moveCursorTo('#dim1', -50, 0); 
+    await wait(500);
+    
+    // 依次给五个维度打分，你会看到雷达图随之疯狂变形！
+    await setSliderValue('#dim1', 4); // EXEC 执行力
+    await setSliderValue('#dim2', 3); // TEAM 团队协作
+    await setSliderValue('#dim3', 5); // COMM 沟通能力
+    await setSliderValue('#dim4', 2); // LEAD 领导力
+    await setSliderValue('#dim5', 3); // INNO 创新力
+    await wait(1000);
+
+    // 7. 填写招募人数
+    await moveCursorTo('#task-capacity');
+    await typeIn('#task-capacity', '15', 100);
+
+    // 8. 最终部署
+    await moveCursorTo('#btn-admin-publish');
+    const deployBtn = document.querySelector('#btn-admin-publish');
+    deployBtn.classList.add('tut-click-blink');
+    await wait(500);
+    deployBtn.click(); // 触发真实提交！
+    deployBtn.classList.remove('tut-click-blink');
+
+    // 剧终散场
+    await wait(2000);
+    cursor.remove();
+    console.log(">> 🎬 演示完成！");
+}
+
+// 网页加载后 3 秒自动开始
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(runTutorialDemo, 3000); 
+});
