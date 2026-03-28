@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,43 +8,43 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="global.css"> 
+    <link rel="stylesheet" href="global.css">
 </head>
 <body>
     <div class="d-flex">
         <div class="sidebar p-4 d-flex flex-column">
-           <div class="sys-logo mb-4 text-dark d-flex align-items-center">
-    <i class="bi bi-shield-check fs-3 me-2 text-danger"></i>
-    <span class="fs-4 fw-black">SYS.TIMEBANK</span>
-</div>
+            <div class="sys-logo mb-4 text-dark d-flex align-items-center">
+                <i class="bi bi-shield-check fs-3 me-2 text-danger"></i>
+                <span class="fs-4 fw-black">SYS.TIMEBANK</span>
+            </div>
             
-            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">GLOBAL_AUDIT // 全局审批</div>
+            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">GLOBAL_AUDIT</div>
             <ul class="nav nav-pills flex-column mb-4">
                 <li class="nav-item">
                     <a href="#" class="nav-link active px-3 py-2" id="nav-pending">
-                        <i class="bi bi-inbox-fill me-2"></i> 任务上架审批 <span class="badge bg-dark text-white ms-2 border border-white" id="pending-count">0</span>
+                        <i class="bi bi-inbox-fill me-2"></i> TASK PUBLISH AUDIT <span class="badge bg-dark text-white ms-2 border border-white" id="pending-count">0</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link px-3 py-2" id="nav-retro">
-                        <i class="bi bi-clock-history me-2"></i> 志愿补录审批 <span class="badge bg-danger text-white ms-2 border border-white" id="retro-count">0</span>
+                        <i class="bi bi-clock-history me-2"></i> RETROACTIVE AUDIT <span class="badge bg-danger text-white ms-2 border border-white" id="retro-count">0</span>
                     </a>
                 </li>
             </ul>
 
-            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">OFFICIAL_PROC // 官方流程</div>
+            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">OFFICIAL_PROC</div>
             <ul class="nav nav-pills flex-column mb-4">
-                <li class="nav-item"><a href="#" class="nav-link px-3 py-2" id="nav-publish"><i class="bi bi-megaphone-fill me-2"></i> 发布官方任务</a></li>
-                <li class="nav-item"><a href="#" class="nav-link px-3 py-2" id="nav-manage"><i class="bi bi-list-check me-2"></i> 官方任务进度</a></li>
-                <li class="nav-item"><a href="#" class="nav-link px-3 py-2" id="nav-assess"><i class="bi bi-clipboard-data-fill me-2"></i> 官方任务结算</a></li>
+                <li class="nav-item"><a href="#" class="nav-link px-3 py-2" id="nav-publish"><i class="bi bi-megaphone-fill me-2"></i> DEPLOY OFFICIAL TASK</a></li>
+                <li class="nav-item"><a href="#" class="nav-link px-3 py-2" id="nav-manage"><i class="bi bi-list-check me-2"></i> OFFICIAL TASK LOGS</a></li>
+                <li class="nav-item"><a href="#" class="nav-link px-3 py-2" id="nav-assess"><i class="bi bi-clipboard-data-fill me-2"></i> OFFICIAL SETTLEMENT</a></li>
             </ul>
 
-            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">DATA_CENTER // 数据中心</div>
+            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">DATA_CENTER</div>
             <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item"><a href="#" class="nav-link px-3 py-2" id="nav-students"><i class="bi bi-database-fill me-2"></i> 全校学生数据</a></li>
+                <li class="nav-item"><a href="#" class="nav-link px-3 py-2" id="nav-students"><i class="bi bi-database-fill me-2"></i> ALL STUDENT DATA</a></li>
             </ul>
             
-            <div class="mt-auto border-top border-dark pt-3" style="border-width: 2px !important; border-color: var(--brut-black) !important;">
+            <div class="mt-auto border-top border-dark pt-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div style="font-family: var(--font-mono); font-size: 0.8rem;">
                         <div class="fw-black fs-6 text-truncate text-uppercase" style="max-width: 150px; color: var(--brut-red);" id="sidebar-realname">LOADING...</div>
@@ -56,15 +56,13 @@
         </div>
 
         <div class="flex-grow-1" style="height: 100vh; overflow-y: auto;">
-            
-            <nav class="navbar navbar-expand-lg brut-navbar px-4 py-3 d-flex justify-content-between">
-    <span class="navbar-brand m-0" id="top-title">TERMINAL // 任务上架审批</span>
-    
-    <div class="d-flex gap-3">
-        <button class="btn btn-brut px-3" id="btn-theme-toggle" title="TOGGLE THEME"><i class="bi bi-moon-stars-fill"></i></button>
-        <button class="btn btn-brut px-3" id="btn-settings" title="SYSTEM SETTINGS"><i class="bi bi-gear-fill"></i> SETTINGS</button>
-    </div>
-</nav>
+            <nav class="navbar navbar-expand-lg brut-navbar px-4 py-3 d-flex justify-content-between align-items-center">
+                <span class="navbar-brand m-0" id="top-title">TERMINAL // TASK PUBLISH AUDIT</span>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-brut px-3" id="btn-theme-toggle" title="TOGGLE THEME"><i class="bi bi-moon-stars-fill"></i></button>
+                    <button class="btn btn-brut px-3" id="btn-settings" title="SYSTEM SETTINGS"><i class="bi bi-gear-fill"></i> SETTINGS</button>
+                </div>
+            </nav>
 
             <div class="container-fluid p-4">
                 
@@ -73,7 +71,7 @@
                     <div class="table-responsive">
                         <table class="table brut-table align-middle">
                             <thead><tr><th class="ps-4 py-3">PUBLISHER</th><th>TASK_NAME</th><th>EST_REWARD</th><th>CAPACITY</th><th>TIMESTAMP</th><th class="text-end pe-4">ACTION</th></tr></thead>
-                            <tbody id="pending-table-body"><tr><td colspan="6" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
+                            <tbody id="pending-table-body"><tr><td colspan="6" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -82,20 +80,15 @@
                     <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> RETRO_ENTRIES_AUDIT</h5>
                     <div class="table-responsive">
                         <table class="table brut-table align-middle">
-    <thead>
-        <tr class="align-middle text-center">
-            <th class="py-3">STUDENT</th>
-            <th>EVENT_DESC</th>
-            <th>CLAIMED_HOURS</th>
-            <th>EVIDENCE</th>
-            <th>TIMESTAMP</th>
-            <th>ACTION</th>
-        </tr>
-    </thead>
-    <tbody id="retro-list-body">
-        <tr><td colspan="6" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr>
-    </tbody>
-</table>
+                            <thead>
+                                <tr class="align-middle text-center">
+                                    <th class="py-3">STUDENT</th><th>EVENT_DESC</th><th>CLAIMED_HOURS</th><th>EVIDENCE</th><th>TIMESTAMP</th><th>ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="retro-list-body">
+                                <tr><td colspan="6" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -111,8 +104,8 @@
                                 <div class="col-md-4">
                                     <label class="form-label font-monospace fw-bold small">CATEGORY</label>
                                     <select class="form-select brut-input" id="task-category">
-                                        <option value="官方指定" selected>OFFICIAL</option>
-                                        <option value="大型活动">EVENT</option>
+                                        <option value="OFFICIAL" selected>OFFICIAL</option>
+                                        <option value="EVENT">EVENT</option>
                                     </select>
                                 </div>
                             </div>
@@ -157,7 +150,7 @@
                     <div class="table-responsive">
                         <table class="table brut-table align-middle">
                             <thead><tr><th class="ps-4 py-3">OFFICIAL_TASK</th><th>EST_REWARD</th><th>DEADLINE</th><th>STATUS</th></tr></thead>
-                            <tbody id="my-tasks-body"><tr><td colspan="4" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
+                            <tbody id="my-tasks-body"><tr><td colspan="4" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -167,7 +160,7 @@
                     <div class="table-responsive">
                         <table class="table brut-table align-middle">
                             <thead><tr><th class="ps-4 py-3">STUDENT_ID</th><th>TASK_REF</th><th>YIELD (H/C)</th><th>STATUS</th><th class="text-end pe-4">ACTION</th></tr></thead>
-                            <tbody id="audit-records-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
+                            <tbody id="audit-records-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -177,7 +170,7 @@
                     <div class="table-responsive">
                         <table class="table brut-table align-middle">
                             <thead><tr><th class="ps-4 py-3">STUDENT_ID</th><th class="text-center">TOTAL_HOURS</th><th class="text-center">ASSETS (COIN)</th><th class="text-center">REPUTATION</th><th class="text-center">ACTIVE_PROC</th></tr></thead>
-                            <tbody id="all-students-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
+                            <tbody id="all-students-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr></tbody>
                         </table>
                     </div>
                 </div>

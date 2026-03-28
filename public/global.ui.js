@@ -84,7 +84,9 @@ if (logoutBtn) {
             title: 'TERMINATE SESSION', 
             text: 'Are you sure you want to terminate the current session and log out?',
             icon: 'warning', 
-            showCancelButton: true 
+            showCancelButton: true,
+            confirmButtonText: 'OK',      // 强行指定按钮文字
+            cancelButtonText: 'Cancel'    // 强行指定按钮文字
         });
         if (res.isConfirmed) { 
             localStorage.clear(); 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,30 +15,30 @@
     <div class="d-flex">
         <div class="sidebar p-4 d-flex flex-column">
             <div class="sys-logo mb-4 text-dark d-flex align-items-center">
-    <i class="bi bi-bank fs-3 me-2 text-danger"></i>
-    <span class="fs-4 fw-black">SYS.TIMEBANK</span>
-</div>
+                <i class="bi bi-bank fs-3 me-2 text-danger"></i>
+                <span class="fs-4 fw-black">SYS.TIMEBANK</span>
+            </div>
             
-            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">TASK_CONTROL // 任务控制</div>
+            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">TASK_CONTROL</div>
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
                     <a href="#" class="nav-link active px-3 py-2" id="nav-publish">
-                        <i class="bi bi-plus-square-fill me-2"></i> 发布新任务 [NEW]
+                        <i class="bi bi-plus-square-fill me-2"></i> DEPLOY NEW TASK [NEW]
                     </a>
                 </li>
                 <li class="nav-item mt-2">
                     <a href="#" class="nav-link px-3 py-2" id="nav-manage">
-                        <i class="bi bi-list-check me-2"></i> 任务进度管理 [LOGS]
+                        <i class="bi bi-list-check me-2"></i> TASK PROGRESS LOGS [LOGS]
                     </a>
                 </li>
                 <li class="nav-item mt-2">
                     <a href="#" class="nav-link px-3 py-2" id="nav-audit">
-                        <i class="bi bi-clipboard-data-fill me-2"></i> 考核与结算 [AUDIT]
+                        <i class="bi bi-clipboard-data-fill me-2"></i> AUDIT & SETTLEMENT [AUDIT]
                     </a>
                 </li>
             </ul>
             
-            <div class="mt-auto border-top border-dark pt-3" style="border-width: 2px !important; border-color: var(--brut-black) !important;">
+            <div class="mt-auto border-top border-dark pt-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div style="font-family: var(--font-mono); font-size: 0.8rem;">
                         <div class="fw-black fs-6 text-truncate text-uppercase" style="max-width: 150px; color: var(--brut-red);" id="sidebar-realname">LOADING...</div>
@@ -51,14 +51,13 @@
 
         <div class="flex-grow-1" style="height: 100vh; overflow-y: auto;">
             
-             <nav class="navbar navbar-expand-lg brut-navbar px-4 py-3 d-flex justify-content-between">
-    <span class="navbar-brand m-0" id="top-title">TERMINAL // 发布新任务</span>
-    
-    <div class="d-flex gap-3">
-        <button class="btn btn-brut px-3" id="btn-theme-toggle" title="TOGGLE THEME"><i class="bi bi-moon-stars-fill"></i></button>
-        <button class="btn btn-brut px-3" id="btn-settings" title="SYSTEM SETTINGS"><i class="bi bi-gear-fill"></i> SETTINGS</button>
-    </div>
-</nav>
+            <nav class="navbar navbar-expand-lg brut-navbar px-4 py-3 d-flex justify-content-between align-items-center">
+                <span class="navbar-brand m-0" id="top-title">TERMINAL // DEPLOY NEW TASK</span>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-brut px-3" id="btn-theme-toggle" title="TOGGLE THEME"><i class="bi bi-moon-stars-fill"></i></button>
+                    <button class="btn btn-brut px-3" id="btn-settings" title="SYSTEM SETTINGS"><i class="bi bi-gear-fill"></i> SETTINGS</button>
+                </div>
+            </nav>
 
             <div class="container-fluid p-4">
                 
@@ -74,8 +73,8 @@
                                 <div class="col-md-4">
                                     <label class="form-label font-monospace fw-bold small">CATEGORY</label>
                                     <select class="form-select brut-input" id="task-category">
-                                        <option value="校内协助" selected>校内协助 (CAMPUS)</option>
-                                        <option value="活动支援">活动支援 (EVENT)</option>
+                                        <option value="CAMPUS" selected>CAMPUS ASSISTANCE</option>
+                                        <option value="EVENT">EVENT SUPPORT</option>
                                     </select>
                                 </div>
                             </div>
@@ -120,7 +119,7 @@
                     <div class="table-responsive">
                         <table class="table brut-table align-middle">
                             <thead><tr><th class="ps-4 py-3">TASK_NAME</th><th>EST_REWARD</th><th>DEADLINE</th><th>STATUS</th></tr></thead>
-                            <tbody id="my-tasks-body"><tr><td colspan="4" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
+                            <tbody id="my-tasks-body"><tr><td colspan="4" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -128,12 +127,12 @@
                 <div id="section-audit" class="page-section">
                     <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> AUDIT_&_SETTLEMENT</h5>
                     <div class="p-3 mb-4 bg-light border border-dark border-2 font-monospace small">
-                        <i class="bi bi-shield-fill-exclamation text-danger me-2"></i><strong>SLA_RULE:</strong> 任务结束 <strong>3天内</strong> 可核减违规工时；心得提交后 <strong>7天内</strong> 可发放绩效奖金。
+                        <i class="bi bi-shield-fill-exclamation text-danger me-2"></i><strong>SLA_RULE:</strong> Hours can be deducted within 3 days after task completion; bonus can be awarded within 7 days after log submission.
                     </div>
                     <div class="table-responsive">
                         <table class="table brut-table align-middle">
                             <thead><tr><th class="ps-4 py-3">STUDENT_ID</th><th>TASK_REF</th><th>YIELD (H/C)</th><th>STATUS</th><th class="text-end pe-4">ACTION</th></tr></thead>
-                            <tbody id="audit-records-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">FETCHING DATA...</td></tr></tbody>
+                            <tbody id="audit-records-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
