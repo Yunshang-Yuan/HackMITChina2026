@@ -9,8 +9,10 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+// 优先读取云端环境变量，如果没有，则降级使用本地数据库（用于本地开发）
+const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/timebank';
 
-mongoose.connect('mongodb://127.0.0.1:27017/timebank')
+mongoose.connect(mongoURI)
     .then(() => console.log('✅ 数据库连接成功！TimeBank 记忆中枢已上线！'))
     .catch((err) => console.error('❌ 数据库连接失败：', err));
 
@@ -700,7 +702,13 @@ app.delete('/api/dev/users/:email', async (req, res) => {
 });
 // ============================================================================
 
-// 10. 服务启动：监听端口，启动后端服务
-app.listen(PORT, () => {
-    console.log(`✅ 服务器启动完毕！正在监听 ${PORT} 端口...`);
-});
+// 10. 服务启动：兼容本地监听与 Vercel Serverless 导出
+if (process.env.NODE_ENV !== 'production') {
+    // 只有在非生产环境（本地）才自己监听端口
+    app.listen(PORT, () => {
+        console.log(`✅ 本地服务器启动完毕！正在监听 ${PORT} 端口...`);
+    });
+}
+
+// ⚠️ 这是 Vercel 必须要的一行，把实例交接给云端引擎
+module.exports = app;
