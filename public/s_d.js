@@ -226,7 +226,9 @@ function populateRetroProfile() {
     document.getElementById('retro-email').textContent = userEmail;
     document.getElementById('retro-name').textContent = realName;
     document.getElementById('retro-id').textContent = studentId;
-    document.getElementById('retro-class').textContent = studentClass;
+    
+    // 【已修复】直接从本地缓存获取 Class，防止未定义报错
+    document.getElementById('retro-class').textContent = localStorage.getItem('studentClass') || sessionStorage.getItem('studentClass') || 'N/A';
 }
 
 function calculateRetroHours() {
