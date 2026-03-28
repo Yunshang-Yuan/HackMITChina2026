@@ -153,6 +153,18 @@ window.openReviewModal = function(recordId) {
     document.getElementById('modal-max-bonus').textContent = record.taskId.baseCoins;
     document.getElementById('modal-bonus-input').value = 0;
     document.getElementById('modal-current-record-id').value = recordId;
+
+    // 👇 ========= 新增的这两步 ========= 👇
+    // 1. 把任务名称和时长绑到 AI 打分按钮的 dataset 上
+    const aiBtn = document.getElementById('btn-ai-evaluate');
+    if (aiBtn) {
+        aiBtn.dataset.taskTitle = record.taskId.title;
+        aiBtn.dataset.taskHours = record.taskId.duration;
+    }
+    // 2. 每次打开新弹窗时，把上一次的 AI 评估结果框隐藏掉
+    document.getElementById('ai-eval-result-box').style.display = 'none';
+    // 👆 =============================== 👆
+
     new bootstrap.Modal(document.getElementById('reviewModal')).show();
 };
 
@@ -168,6 +180,81 @@ document.getElementById('btn-submit-review').addEventListener('click', async () 
             loadAuditRecords();
         } else Swal.fire({ ...brutSwalObj, title: 'ERR', text: data.message, icon: 'error' });
     } catch (error) { Swal.fire({ ...brutSwalObj, title: 'SYS_ERR', text: 'CONNECTION LOST.', icon: 'error' }); }
+});
+
+// ================= 新增：AI 辅助功能 =================
+
+// 1. AI 润色任务描述
+document.getElementById('btn-ai-refine')?.addEventListener('click', async function() {
+    const descInput = document.getElementById('task-desc');
+    const originalText = descInput.value.trim();
+    
+    // 复用你已经配好的 SweetAlert (Toast)
+    if (!originalText) return Toast.fire({ icon: 'warning', title: '请输入基础描述！' });
+
+    const originalBtnHtml = this.innerHTML;
+    this.innerHTML = '<i class="bi bi-hourglass-split"></i> 润色中...';
+    this.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/ai/refine`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ description: originalText })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            descInput.value = data.response;
+            Toast.fire({ icon: 'success', title: '描述已扩写！' });
+        } else throw new Error(data.message);
+    } catch (error) {
+        Swal.fire({ ...brutSwalObj, title: 'AI_ERR', text: '网络请求失败。', icon: 'error' });
+    } finally {
+        this.innerHTML = originalBtnHtml;
+        this.disabled = false;
+    }
+});
+
+// 2. AI 评估志愿心得
+document.getElementById('btn-ai-evaluate')?.addEventListener('click', async function() {
+    const reflectionText = document.getElementById('modal-reflection-text').textContent;
+    // 从按钮自定义属性上读取上下文（下文会教你怎么绑上去）
+    const taskTitle = this.dataset.taskTitle || '未知任务';
+    const taskHours = this.dataset.taskHours || '未知时长';
+    
+    const resultBox = document.getElementById('ai-eval-result-box');
+    const resultContent = document.getElementById('ai-eval-content');
+
+    if (reflectionText.length < 5) return Toast.fire({ icon: 'warning', title: '字数太少，无需评估' });
+
+    const originalBtnHtml = this.innerHTML;
+    this.innerHTML = '<i class="bi bi-cpu-fill"></i> 分析中...';
+    this.disabled = true;
+    
+    // 显示评估框，呈现极客风的 Loading 动画
+    resultBox.style.display = 'block';
+    resultContent.innerHTML = '<span class="text-danger fw-bold blinking-text">CONNECTING TO AI CORE...</span>';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/ai/evaluate-reflection`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reflection: reflectionText, taskTitle, hours: taskHours })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            // 注意：如果你把之前的 parseMarkdown 放到 global.ui.js 里了，这里就可以直接调用。
+            // 否则这里可以用 data.response.replace(/\n/g, '<br>') 做一个简单的换行回退处理。
+            resultContent.innerHTML = typeof parseMarkdown === 'function' ? parseMarkdown(data.response) : data.response.replace(/\n/g, '<br>');
+        } else throw new Error(data.message);
+    } catch (error) {
+        resultContent.innerHTML = '<span class="text-danger fw-bold">SYS_ERR: AI ENGINE OFFLINE.</span>';
+    } finally {
+        this.innerHTML = originalBtnHtml;
+        this.disabled = false;
+    }
 });
 
 window.markAnomaly = async function(recordId) {

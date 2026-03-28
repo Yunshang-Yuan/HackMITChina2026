@@ -80,6 +80,12 @@
                             </div>
                             <div class="mb-4">
                                 <label class="form-label font-monospace fw-bold small">TASK_DESCRIPTION *</label>
+                                <div class="d-flex justify-content-between align-items-end mb-1">
+    <label class="form-label font-monospace fw-bold small m-0">TASK_DESCRIPTION *</label>
+    <button type="button" class="btn btn-sm btn-brut btn-brut-blue px-2 py-0" id="btn-ai-refine" style="font-size: 0.8rem;">
+        <i class="bi bi-magic"></i> AI 扩写
+    </button>
+</div>
                                 <textarea class="form-control brut-input" id="task-desc" rows="3" required></textarea>
                             </div>
                             <div class="row mb-4">
@@ -152,6 +158,15 @@
                     <span class="badge-brut mb-3">STUDENT_LOG_DATA</span>
                     <div class="bg-light border border-dark border-2 p-3 mb-4 font-monospace small" style="min-height: 100px; max-height: 250px; overflow-y: auto;">
                         <em id="modal-reflection-text" style="white-space: pre-wrap;">LOADING...</em>
+                        <div class="text-end mb-3 mt-n2">
+    <button type="button" class="btn btn-sm btn-brut btn-brut-red px-3" id="btn-ai-evaluate">
+        <i class="bi bi-robot"></i> 启动 AI 辅助打分
+    </button>
+</div>
+
+<div id="ai-eval-result-box" class="p-3 mb-4 bg-white border border-dark font-monospace small" style="display: none; border-style: dashed !important; border-width: 2px !important;">
+    <div id="ai-eval-content" class="markdown-content text-dark"></div>
+</div>
                     </div>
                     <span class="badge-brut mb-3">PERFORMANCE_BONUS (COIN)</span>
                     <div class="d-flex align-items-center">
