@@ -1,3 +1,4 @@
+require('dotenv').config();
 // 1. 核心依赖导入与服务初始化：引入Express/MongoDB/CORS，创建服务实例、配置端口
 const express = require('express');
 const mongoose = require('mongoose');
@@ -196,26 +197,29 @@ app.get('/api/student/profile', async (req, res) => {
     }
 });
 
-// ================= 新增模块：AI 辅助中枢 (DeepSeek 引擎) =================
+// ================= 新增模块：AI 辅助中枢 =================
 
-// 辅助函数：调用 AI API (基于 Node 18+ 原生 fetch)
-// ⚠️ 注意：记得在运行前设置环境变量，或者直接替换 '你的_DEEPSEEK_API_KEY'
 async function callDeepSeekAPI(userMessage, systemPrompt) {
-    const apiKey = process.env.DEEPSEEK_API_KEY || '你的_DEEPSEEK_API_KEY';
-    
-    if (!apiKey || apiKey === '你的_DEEPSEEK_API_KEY') {
-        return "[模拟回复] API Key 未配置。如果是真实环境，这里会返回 AI 生成的内容。";
+    // 读取环境变量
+    const provider = process.env.AI_PROVIDER || 'mock';
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+
+    // 如果环境变量设置的不是 deepseek，或者没读到 Key，就走模拟回复
+    if (provider !== 'deepseek' || !apiKey) {
+        console.log(`⚠️ 当前使用模拟 AI 回复 (Provider: ${provider})`);
+        return "【系统模拟回复】AI 引擎未真实调用。这里是用于测试的占位文本，如果你看到了这段话，说明你的前后端接口已经通了，只是没有真正发送给 DeepSeek！";
     }
 
     try {
+        console.log('🚀 正在调用真实 DeepSeek API...');
         const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
+                'Authorization': `Bearer ${apiKey}` // 这里会自动读取你配置的测试 Key
             },
             body: JSON.stringify({
-                model: 'deepseek-chat', // 推荐使用 chat 模型，速度比 reasoner 快，适合文本处理
+                model: 'deepseek-chat', 
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userMessage }
@@ -223,23 +227,25 @@ async function callDeepSeekAPI(userMessage, systemPrompt) {
             })
         });
 
-        if (!response.ok) throw new Error(`API 错误: ${response.status}`);
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`API 报错: ${response.status} - ${errText}`);
+        }
         const data = await response.json();
         return data.choices[0].message.content;
     } catch (error) {
         console.error('DeepSeek 调用失败:', error);
-        return "AI 服务暂时开小差了，请稍后再试。";
+        return "AI 服务暂时开小差了，请检查网络或控制台报错。";
     }
 }
 
-// 接口 1：AI 任务描述润色 (供教师/管理员发布任务时使用)
+// 接口 1：AI 任务描述润色 
 app.post('/api/ai/refine', async (req, res) => {
     try {
         const { description } = req.body;
         if (!description) return res.status(400).json({ success: false, message: "描述不能为空" });
 
-        const systemPrompt = `你是一个专业的青年志愿服务活动策划师。请将用户输入的简短任务描述，扩写、润色为专业、清晰、富有吸引力的志愿任务招募文案。
-        要求：保留原意，分点说明（如：任务目标、具体工作、注意事项），语气要鼓励、积极。直接输出结果，不要包含寒暄。`;
+        const systemPrompt = `你是一个专业的青年志愿服务活动策划师。请将用户输入的简短任务描述，扩写、润色为专业、清晰、富有吸引力的志愿任务招募文案。要求：保留原意，分点说明，语气鼓励积极。直接输出结果，不要包含寒暄。`;
 
         const aiResponse = await callDeepSeekAPI(description, systemPrompt);
         res.json({ success: true, response: aiResponse });
@@ -248,21 +254,17 @@ app.post('/api/ai/refine', async (req, res) => {
     }
 });
 
-// 接口 2：AI 志愿心得评估 (供老师/审核员打分参考)
+// 接口 2：AI 志愿心得评估
 app.post('/api/ai/evaluate-reflection', async (req, res) => {
     try {
-        // 可以传入心得内容，以及对应的任务标题和工时作为上下文
         const { reflection, taskTitle, hours } = req.body;
         if (!reflection) return res.status(400).json({ success: false, message: "心得内容不能为空" });
 
-        const systemPrompt = `你是中学生 TimeBank 志愿服务系统的严格但公平的 AI 审核助手。
-        请根据学生提交的志愿心得进行评估。
-        评估标准：1. 真实性与细节；2. 情感投入与个人成长；3. 篇幅是否匹配其申请的工时长度。
-        
+        const systemPrompt = `你是中学生 TimeBank 志愿服务系统的严格但公平的 AI 审核助手。请根据学生提交的志愿心得进行评估。
         请严格按照以下 Markdown 格式输出：
         ### 📊 AI 评估报告
-        - **建议评分 (10分制)**: [给出分数，如 8/10]
-        - **评语参考**: [提供2-3句鼓励且中肯的评语，供老师直接复制使用]
+        - **建议评分 (10分制)**: [给出分数]
+        - **评语参考**: [提供2-3句鼓励且中肯的评语]
         - **核心亮点**: [指出写得好的地方]
         - **扣分项/不足**: [如果没有可填"无"]`;
 
@@ -274,7 +276,6 @@ app.post('/api/ai/evaluate-reflection', async (req, res) => {
         res.status(500).json({ success: false, message: "AI 评估失败" });
     }
 });
-// ============================================================================
 
 // 5. 任务管理接口：任务发布、列表查询、审核、教师个人任务管理
 app.post('/api/tasks', async (req, res) => {
