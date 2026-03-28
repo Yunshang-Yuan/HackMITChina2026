@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="global.css">
+    <script src="js/i18n.js"></script>
 </head>
 <body>
     <div class="d-flex">
@@ -75,7 +76,11 @@
                         </table>
                     </div>
                 </div>
-
+                    <!-- 语言切换下拉框 -->
+                    <select id="langSwitcher" class="btn btn-brut px-3 brut-input" onchange="changeLanguage(this.value)">
+                        <option value="en">English</option>
+                        <option value="zh">中文</option>
+                    </select>
                 <div id="section-retro" class="page-section">
                     <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> RETRO_ENTRIES_AUDIT</h5>
                     <div class="table-responsive">

@@ -221,7 +221,7 @@ async function callDeepSeekAPI(userMessage, systemPrompt) {
                 'Authorization': `Bearer ${apiKey}` // 这里会自动读取你配置的测试 Key
             },
             body: JSON.stringify({
-                model: 'deepseek-chat', 
+                model: 'deepseek-reasoner', 
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userMessage }

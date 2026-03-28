@@ -170,3 +170,59 @@ document.querySelectorAll('.dim-slider').forEach(slider => {
         }
     });
 });
+// 全局存储当前语言的翻译数据
+let translations = {};
+
+// 1. 初始化语言（优先读取用户之前的选择，默认使用英文）
+const defaultLang = localStorage.getItem('userLang') || 'en';
+
+// 2. 核心加载函数：去拉取对应的 JSON 文件
+async function loadLanguage(lang) {
+  try {
+      // 注意：这里的路径要对应你实际存放 JSON 的位置
+      const response = await fetch(`./locales/${lang}.json`);
+      if (!response.ok) throw new Error('网络请求失败');
+      
+      translations = await response.json();
+      
+      // 拉取成功后，执行页面文本替换
+      applyTranslations();
+      
+      // 把用户的选择存到浏览器里，下次打开网页还是这个语言
+      localStorage.setItem('userLang', lang);
+      
+      // 同步更新下拉菜单的选中状态
+      const switcher = document.getElementById('langSwitcher');
+      if (switcher) switcher.value = lang;
+
+      // 更新 HTML 标签的 lang 属性 (对 SEO 和屏幕阅读器友好)
+      document.documentElement.lang = lang;
+
+  } catch (error) {
+      console.error('加载语言包失败:', error);
+  }
+}
+
+// 3. 核心替换函数：遍历并替换网页上的文字
+function applyTranslations() {
+  // 找到页面上所有带有 data-i18n 属性的元素
+  const elements = document.querySelectorAll('[data-i18n]');
+  
+  elements.forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      // 如果 JSON 里有这个 key，就把文字替换掉
+      if (translations[key]) {
+          el.textContent = translations[key];
+      }
+  });
+}
+
+// 4. 暴露给 HTML 中 select 标签使用的切换函数
+function changeLanguage(lang) {
+  loadLanguage(lang);
+}
+
+// 5. 网页加载完成后，立刻执行初始化
+document.addEventListener('DOMContentLoaded', () => {
+  loadLanguage(defaultLang);
+});
