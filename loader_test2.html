@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>极致透明水晶玻璃</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: #000; /* 纯黑底色 */
+            overflow: hidden;
+            font-family: -apple-system, sans-serif;
+        }
+
+        /* 底层：动态光晕（为了测试透明度） */
+        .ambient-light {
+            position: fixed;
+            width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(63,94,251,0.8) 0%, rgba(252,70,107,0) 70%);
+            z-index: 1;
+            top: 20%; left: 25%;
+            filter: blur(60px);
+            animation: move 15s infinite alternate ease-in-out;
+        }
+
+        /* 核心：全屏水晶透明层 */
+        .crystal-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2;
+            
+            /* 1. 极其微弱的白色遮罩 (只保留 0.03 的不透明度，几乎不可见) */
+            background: rgba(255, 255, 255, 0.03); 
+            
+            /* 2. 核心滤镜：低模糊度 + 高亮度提升 */
+            /* 较低的 blur (10px) 会让玻璃看起来更轻薄、更透明 */
+            backdrop-filter: blur(12px) brightness(1.1) saturate(130%);
+            -webkit-backdrop-filter: blur(12px) brightness(1.1) saturate(130%);
+
+            /* 3. 内发光：这是“透明感”的灵魂，模拟玻璃侧面的折射光 */
+            box-shadow: inset 0 0 80px rgba(255, 255, 255, 0.05);
+        }
+
+        /* 4. 表面高光纹理：模拟玻璃划痕或微小反光 */
+        .crystal-screen::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.04;
+            /* 极细的噪点，模拟纯净玻璃表面的质感 */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.99' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* 5. 顶部的极细高光线 */
+        .crystal-screen::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 20px;
+            font-weight: 100;
+            font-size: 4rem;
+        }
+
+        @keyframes move {
+            from { transform: translate(-20%, -20%); }
+            to { transform: translate(40%, 30%); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-light"></div>
+    <div class="crystal-screen"></div>
+
+    <div class="content">
+        CRYSTAL
+    </div>
+
+</body>
+</html>

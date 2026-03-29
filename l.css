@@ -1,0 +1,183 @@
+/* ================= l.css (登录页完整粗野主义样式) ================= */
+
+/* 1. 全局变量与暗黑模式变量定义 */
+:root {
+    --brut-bg: #f4f4f0;
+    --brut-black: #0a0a0a;
+    --brut-white: #ffffff;
+    --brut-red: #e62117;
+    --brut-border: 2px solid var(--brut-black);
+    --font-mono: 'Courier New', Courier, monospace;
+}
+
+body.dark-mode {
+    --brut-bg: #0d0d0d;
+    --brut-black: #d1d1ca;
+    --brut-white: #1a1a1a;
+    --brut-red: #ff473e;
+}
+
+/* 2. 基础全局样式 */
+body {
+    background-color: var(--brut-bg);
+    color: var(--brut-black);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.1s, color 0.1s;
+}
+* { border-radius: 0 !important; }
+
+/* Bootstrap 边框颜色暗黑模式兼容 */
+body.dark-mode .border-bottom { border-color: var(--brut-black) !important; }
+
+/* 3. 核心卡片组件样式 */
+.brut-card {
+    background-color: var(--brut-white);
+    border: var(--brut-border);
+    box-shadow: 8px 8px 0px var(--brut-black);
+}
+
+/* 4. 按钮样式 */
+.btn-brut {
+    background: var(--brut-white);
+    color: var(--brut-black);
+    border: var(--brut-border);
+    font-weight: 800;
+    text-transform: uppercase;
+    box-shadow: 4px 4px 0px var(--brut-black);
+    transition: none;
+}
+.btn-brut:hover { 
+    background: var(--brut-black); 
+    color: var(--brut-white) !important; 
+}
+.btn-brut:active { 
+    transform: translate(4px, 4px); 
+    box-shadow: 0px 0px 0px var(--brut-black); 
+}
+.btn-brut-red { 
+    background: var(--brut-red); 
+    color: white !important; 
+}
+
+/* 5. 徽章样式 */
+.badge-brut {
+    background: var(--brut-white);
+    color: var(--brut-black);
+    border: 2px solid var(--brut-black);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    padding: 4px 8px;
+    box-shadow: 2px 2px 0px var(--brut-black);
+}
+
+/* 6. 导航标签 (Tabs) 样式重写 */
+.nav-pills .nav-link { 
+    color: var(--brut-black); 
+    font-weight: 700; 
+    border: var(--brut-border); 
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0px var(--brut-black);
+    background-color: var(--brut-white);
+    transition: none; 
+    
+    /* 👇 新增：强制不换行，并允许过长时优雅截断（防止屏幕太窄时撑破父级） */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.nav-pills .nav-link:hover { 
+    background: var(--brut-black); 
+    color: var(--brut-white); 
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px var(--brut-red);
+}
+
+.nav-pills .nav-link.active { 
+    background: var(--brut-red) !important; 
+    color: white !important; 
+    border-color: var(--brut-black);
+    box-shadow: 2px 2px 0px var(--brut-black);
+}
+
+/* 7. 表单输入框粗野主义样式 */
+.form-control.brut-input, .form-select.brut-input {
+    border: var(--brut-border) !important;
+    border-radius: 0 !important;
+    background-color: var(--brut-white);
+    color: var(--brut-black);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    padding: 0.75rem 1rem;
+    box-shadow: 4px 4px 0px var(--brut-black);
+    transition: none;
+}
+.form-control.brut-input:focus, .form-select.brut-input:focus {
+    outline: none;
+    box-shadow: 4px 4px 0px var(--brut-red);
+    border-color: var(--brut-black) !important;
+    background-color: var(--brut-white);
+    color: var(--brut-black);
+}
+.form-control.brut-input::placeholder {
+    color: #888888;
+    font-weight: normal;
+}
+
+/* 8. 弹窗/模态框暗色适配 */
+body.dark-mode .swal2-popup.brut-modal { 
+    background: var(--brut-white) !important; 
+    border: 4px solid var(--brut-black) !important; 
+    box-shadow: 8px 8px 0px var(--brut-black) !important;
+    color: var(--brut-black);
+}
+
+/* ================= l.css 新增：表单细节与骇客彩蛋适配 ================= */
+
+/* 小眼睛图标悬浮效果 */
+.pwd-toggle:hover {
+    transform: scale(1.1);
+    color: var(--brut-red) !important;
+}
+
+/* 魂斗罗彩蛋：页面级别的强力变异 */
+body.hacker-mode {
+    background-color: #050505 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    color: #00ff00 !important;
+}
+
+body.hacker-mode .brut-card {
+    background-color: #0a0a0a !important;
+    border-color: #00ff00 !important;
+    box-shadow: 8px 8px 0px rgba(0, 255, 0, 0.4) !important;
+    color: #00ff00 !important;
+}
+
+body.hacker-mode .brut-input {
+    background-color: #000000 !important;
+    border-color: #00ff00 !important;
+    color: #00ff00 !important;
+    box-shadow: 4px 4px 0px rgba(0, 255, 0, 0.2) !important;
+}
+
+body.hacker-mode .btn-brut {
+    background-color: #000000 !important;
+    border-color: #00ff00 !important;
+    color: #00ff00 !important;
+}
+
+body.hacker-mode .btn-brut:hover {
+    background-color: #00ff00 !important;
+    color: #000000 !important;
+}
+
+/* 强制让验证码的获取按钮和密码框右侧图标对齐 */
+.position-relative i.bi {
+    font-size: 1.2rem;
+    z-index: 5;
+}

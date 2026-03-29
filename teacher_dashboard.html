@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMEBANK | TEACHER_NODE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="global.css">
+</head>
+<body>
+
+    <div class="d-flex">
+        <div class="sidebar p-4 d-flex flex-column">
+            <div class="sys-logo mb-4 text-dark d-flex align-items-center">
+                <i class="bi bi-bank fs-3 me-2 text-danger"></i>
+                <span class="fs-4 fw-black">SYS.TIMEBANK</span>
+            </div>
+            
+            <div class="font-monospace small fw-bold text-muted mb-2 border-bottom border-dark pb-1">TASK_CONTROL</div>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active px-3 py-2" id="nav-publish">
+                        <i class="bi bi-plus-square-fill me-2"></i> DEPLOY NEW TASK [NEW]
+                    </a>
+                </li>
+                <li class="nav-item mt-2">
+                    <a href="#" class="nav-link px-3 py-2" id="nav-manage">
+                        <i class="bi bi-list-check me-2"></i> TASK PROGRESS LOGS [LOGS]
+                    </a>
+                </li>
+                <li class="nav-item mt-2">
+                    <a href="#" class="nav-link px-3 py-2" id="nav-audit">
+                        <i class="bi bi-clipboard-data-fill me-2"></i> AUDIT & SETTLEMENT [AUDIT]
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="mt-auto border-top border-dark pt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div style="font-family: var(--font-mono); font-size: 0.8rem;">
+                        <div class="fw-black fs-6 text-truncate text-uppercase" style="max-width: 150px; color: var(--brut-red);" id="sidebar-realname">LOADING...</div>
+                        <div class="fw-bold text-muted">ID: <span id="sidebar-studentid">--</span></div>
+                    </div>
+                    <button class="btn btn-brut btn-sm px-2 py-1" id="btn-logout" title="TERMINATE SESSION"><i class="bi bi-power"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-grow-1" style="height: 100vh; overflow-y: auto;">
+            
+            <nav class="navbar navbar-expand-lg brut-navbar px-4 py-3 d-flex justify-content-between align-items-center">
+                <span class="navbar-brand m-0" id="top-title">TERMINAL // DEPLOY NEW TASK</span>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-brut px-3" id="btn-theme-toggle" title="TOGGLE THEME"><i class="bi bi-moon-stars-fill"></i></button>
+                    <button class="btn btn-brut px-3" id="btn-settings" title="SYSTEM SETTINGS"><i class="bi bi-gear-fill"></i> SETTINGS</button>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                
+                <div id="section-publish" class="page-section active">
+                    <div class="brut-card p-4 p-md-5 mx-auto" style="max-width: 900px;">
+                        <h4 class="fw-black mb-4 border-bottom border-dark pb-3"><i class="bi bi-pencil-square text-danger me-2"></i>DEPLOY_VOLUNTEER_TASK</h4>
+                        <form id="task-publish-form">
+                            <div class="row mb-4">
+                                <div class="col-md-8 mb-3 mb-md-0">
+                                    <label class="form-label font-monospace fw-bold small">TASK_TITLE *</label>
+                                    <input type="text" class="form-control brut-input" id="task-title" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label font-monospace fw-bold small">CATEGORY</label>
+                                    <select class="form-select brut-input" id="task-category">
+                                        <option value="CAMPUS" selected>CAMPUS ASSISTANCE</option>
+                                        <option value="EVENT">EVENT SUPPORT</option>
+                                    </select>
+                                </div>
+                            </div>
+                           <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-end mb-1">
+        <label class="form-label font-monospace fw-bold small m-0">TASK_DESCRIPTION *</label>
+        <button type="button" class="btn btn-sm btn-brut btn-brut-blue px-2 py-0" id="btn-ai-refine" style="font-size: 0.8rem;">
+            <i class="bi bi-magic"></i>
+ AI 扩写
+        </button>
+    </div>
+    <textarea class="form-control brut-input" id="task-desc" rows="3" required></textarea>
+    </div>
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+        <label class="form-label font-monospace fw-bold small">START_TIME *</label>
+        <input type="datetime-local" class="form-control brut-input" id="task-start" required>
+    </div>
+                                <div class="col-md-4 mb-3 mb-md-0"><label class="form-label font-monospace fw-bold small">END_TIME *</label><input type="datetime-local" class="form-control brut-input" id="task-end" required></div>
+                                <div class="col-md-4"><label class="form-label font-monospace fw-bold small">BASE_HOURS (H) *</label><input type="number" step="0.5" class="form-control brut-input" id="task-time" required></div>
+                            </div>
+
+                            <hr class="my-4 border-dark" style="border-width: 2px;">
+                            <h5 class="fw-black mb-4"><i class="bi bi-radar text-danger me-2"></i>RADAR_CALIBRATION</h5>
+                            <div class="row mb-4 align-items-center">
+                                <div class="col-md-6 font-monospace small">
+                                    <p class="text-danger fw-bold mb-3">ADJUST DIMENSIONS TO CALC BASE COINS</p>
+                                    <label class="fw-bold">EXEC (<span id="val-dim1">0</span>)</label><input type="range" class="form-range dim-slider" id="dim1" min="0" max="5" value="0">
+                                    <label class="fw-bold mt-2">TEAM (<span id="val-dim2">0</span>)</label><input type="range" class="form-range dim-slider" id="dim2" min="0" max="5" value="0">
+                                    <label class="fw-bold mt-2">COMM (<span id="val-dim3">0</span>)</label><input type="range" class="form-range dim-slider" id="dim3" min="0" max="5" value="0">
+                                    <label class="fw-bold mt-2">LEAD (<span id="val-dim4">0</span>)</label><input type="range" class="form-range dim-slider" id="dim4" min="0" max="5" value="0">
+                                    <label class="fw-bold mt-2">INNO (<span id="val-dim5">0</span>)</label><input type="range" class="form-range dim-slider" id="dim5" min="0" max="5" value="0">
+                                </div>
+                                <div class="col-md-6 d-flex justify-content-center"><div style="width: 100%; max-width: 220px;"><canvas id="radarChart"></canvas></div></div>
+                            </div>
+
+                            <div class="p-3 mb-4 bg-light border border-dark border-2 font-monospace small">
+                                <i class="bi bi-cpu-fill text-danger me-2"></i><strong>AI_PAYROLL:</strong> (HOURS × 10) + (DIM_TOTAL × 2) = BASE COINS.
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-end">
+                                <div class="w-25"><label class="form-label font-monospace fw-bold small">CAPACITY *</label><input type="number" class="form-control brut-input" id="task-capacity" required></div>
+                                <button type="button" class="btn btn-brut btn-brut-red px-5 py-2 fs-5" id="btn-submit-task"><i class="bi bi-send-fill me-2"></i>DEPLOY & AUDIT</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="section-manage" class="page-section">
+                    <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> TASK_PROGRESS_LOGS</h5>
+                    <div class="table-responsive">
+                        <table class="table brut-table align-middle">
+                            <thead><tr><th class="ps-4 py-3">TASK_NAME</th><th>EST_REWARD</th><th>DEADLINE</th><th>STATUS</th></tr></thead>
+                            <tbody id="my-tasks-body"><tr><td colspan="4" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="section-audit" class="page-section">
+                    <h5 class="fw-black mb-4 font-monospace"><i class="bi bi-caret-right-fill text-danger"></i> AUDIT_&_SETTLEMENT</h5>
+                    <div class="p-3 mb-4 bg-light border border-dark border-2 font-monospace small">
+                        <i class="bi bi-shield-fill-exclamation text-danger me-2"></i><strong>SLA_RULE:</strong> Hours can be deducted within 3 days after task completion; bonus can be awarded within 7 days after log submission.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table brut-table align-middle">
+                            <thead><tr><th class="ps-4 py-3">STUDENT_ID</th><th>TASK_REF</th><th>YIELD (H/C)</th><th>STATUS</th><th class="text-end pe-4">ACTION</th></tr></thead>
+                            <tbody id="audit-records-body"><tr><td colspan="5" class="text-center py-4 font-monospace fw-bold">Fetching data from the server...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content brut-modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title fw-black font-monospace m-0 text-uppercase"><i class="bi bi-journal-code text-danger me-2"></i>LOG_REVIEW</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <span class="badge-brut mb-3">STUDENT_LOG_DATA</span>
+                    <div class="bg-light border border-dark border-2 p-3 mb-4 font-monospace small" style="min-height: 100px; max-height: 250px; overflow-y: auto;">
+                        <em id="modal-reflection-text" style="white-space: pre-wrap;">LOADING...</em>
+                        <div class="text-end mb-3 mt-n2">
+    <button type="button" class="btn btn-sm btn-brut btn-brut-red px-3" id="btn-ai-evaluate">
+        <i class="bi bi-robot"></i> 启动 AI 辅助打分
+    </button>
+</div>
+
+<div id="ai-eval-result-box" class="p-3 mb-4 bg-white border border-dark font-monospace small" style="display: none; border-style: dashed !important; border-width: 2px !important;">
+    <div id="ai-eval-content" class="markdown-content text-dark"></div>
+</div>
+                    </div>
+                    <span class="badge-brut mb-3">PERFORMANCE_BONUS (COIN)</span>
+                    <div class="d-flex align-items-center">
+                        <input type="number" class="form-control brut-input w-50 me-3 text-danger fs-5" id="modal-bonus-input" placeholder="0">
+                        <span class="font-monospace fw-bold">/ MAX: <strong id="modal-max-bonus">0</strong></span>
+                    </div>
+                </div>
+                <div class="modal-footer p-3">
+                    <input type="hidden" id="modal-current-record-id">
+                    <button type="button" class="btn btn-brut px-4" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="button" class="btn btn-brut btn-brut-red px-5" id="btn-submit-review">AUTHORIZE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="global.ui.js"></script>
+    <script src="t_d.js"></script>
+</body>
+</html>

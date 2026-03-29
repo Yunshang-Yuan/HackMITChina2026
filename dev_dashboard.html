@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYS.OVERRIDE | DEV_NODE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="l.css"> 
+    <link rel="stylesheet" href="d_d.css"> </head>
+<body class="dev-body d-flex flex-column align-items-center p-3 p-md-5">
+
+    <div class="w-100 d-flex justify-content-between align-items-center mb-4 dev-header-container">
+        <div>
+            <span class="badge dev-badge-danger mb-2">ROOT_ACCESS // GOD_MODE</span>
+            <h2 class="m-0 font-monospace fw-black text-uppercase dev-title">Database_Matrix</h2>
+        </div>
+        <button class="btn btn-dev-outline" id="btn-logout" title="TERMINATE SESSION">
+            <i class="bi bi-power me-2"></i>EXIT_SYS
+        </button>
+    </div>
+
+    <div class="dev-card p-4 w-100">
+        
+        <div class="d-flex justify-content-between align-items-end border-bottom border-secondary pb-3 mb-4">
+            <div>
+                <h5 class="font-monospace fw-bold m-0" style="color: var(--dev-text);">COLLECTION: [USERS]</h5>
+                <small class="font-monospace dev-muted" id="db-status">SCANNING NODES...</small>
+            </div>
+            <button class="btn btn-dev-primary btn-sm px-3 py-2" id="btn-refresh">
+                <i class="bi bi-arrow-clockwise me-1"></i>FORCE_SYNC
+            </button>
+        </div>
+
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table mb-0 dev-table" id="users-table">
+                <thead>
+                    <tr>
+                        <th>SYS_ROLE</th>
+                        <th>REAL_NAME</th>
+                        <th>USER_ID (EMAIL)</th>
+                        <th>STUDENT_ID</th>
+                        <th>TIME_COINS</th>
+                        <th class="text-center">EXECUTE_COMMAND</th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody">
+                    <tr><td colspan="6" class="text-center py-5 font-monospace fw-bold">FETCHING DATABASE...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="d_d.js"></script>
+</body>
+</html>

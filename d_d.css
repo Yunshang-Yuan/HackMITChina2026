@@ -1,0 +1,133 @@
+/* ================= d_d.css (Dev Dashboard 专属重工业粗野风格) ================= */
+
+:root {
+    --dev-bg: #0d0d0d;         /* 深邃黑底 */
+    --dev-card-bg: #1a1a1a;    /* 卡片深灰 */
+    --dev-text: #e0e0e0;       /* 灰白亮字 */
+    --dev-border: #404040;     /* 边框暗灰 */
+    --dev-highlight: #ffffff;  /* 纯白高亮 */
+    --dev-red: #ff473e;        /* 警示红 */
+    --dev-yellow: #ffc107;     /* 警告黄 */
+}
+
+/* 全局覆盖 */
+.dev-body {
+    background-color: var(--dev-bg);
+    color: var(--dev-text);
+    min-height: 100vh;
+}
+
+.dev-header-container {
+    max-width: 1200px;
+}
+
+.dev-title {
+    color: var(--dev-highlight);
+    letter-spacing: -1px;
+}
+
+.dev-muted {
+    color: #888888;
+}
+
+/* 核心暗黑卡片 */
+.dev-card {
+    background-color: var(--dev-card-bg);
+    border: 2px solid var(--dev-border);
+    box-shadow: 8px 8px 0px #000000;
+    max-width: 1200px;
+}
+
+/* 徽章 */
+.dev-badge-danger {
+    background-color: transparent;
+    color: var(--dev-red);
+    border: 2px solid var(--dev-red);
+    font-family: 'Courier New', Courier, monospace;
+    padding: 6px 10px;
+    border-radius: 0;
+    box-shadow: 2px 2px 0px var(--dev-red);
+}
+
+/* ================= 开发者专属表格样式 ================= */
+.dev-table {
+    border: 2px solid var(--dev-border);
+    color: var(--dev-text);
+    margin-bottom: 0;
+}
+
+.dev-table th {
+    background-color: var(--dev-text);
+    color: var(--dev-bg);
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 900;
+    border: 1px solid var(--dev-border);
+    padding: 12px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.dev-table td {
+    background-color: var(--dev-card-bg);
+    color: var(--dev-text);
+    border: 1px solid var(--dev-border);
+    font-family: 'Courier New', Courier, monospace;
+    padding: 12px;
+    vertical-align: middle;
+    transition: background-color 0.2s ease, transform 0.1s;
+}
+
+/* 表格的交互感：Hover 时行高亮 */
+.dev-table tbody tr:hover td {
+    background-color: #2a2a2a; /* 悬浮时变亮 */
+    color: var(--dev-highlight);
+    cursor: crosshair; /* 骇客风的十字光标 */
+}
+
+/* ================= 开发者按钮样式 ================= */
+.btn-dev-primary {
+    background-color: var(--dev-text);
+    color: var(--dev-bg);
+    border: 2px solid var(--dev-text);
+    border-radius: 0;
+    font-weight: 800;
+    box-shadow: 4px 4px 0px #000000;
+    transition: none;
+}
+.btn-dev-primary:hover {
+    background-color: var(--dev-highlight);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000000;
+}
+.btn-dev-primary:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px #000000;
+}
+
+.btn-dev-outline {
+    background-color: transparent;
+    color: var(--dev-text);
+    border: 2px solid var(--dev-text);
+    border-radius: 0;
+    font-weight: 800;
+    box-shadow: 3px 3px 0px var(--dev-border);
+    transition: none;
+}
+.btn-dev-outline:hover {
+    background-color: var(--dev-text);
+    color: var(--dev-bg);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px var(--dev-text);
+}
+
+/* 表格内操作按钮的特殊交互 */
+.btn-dev-action {
+    border-radius: 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    border-width: 2px;
+    transition: all 0.1s;
+}
+.btn-dev-action:hover {
+    transform: scale(1.05);
+}
